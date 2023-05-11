@@ -10,6 +10,19 @@ st.set_page_config(
 # page title
 st.title("PMDM Grupo 11")
 
-st.write("")
+col_1, col_2 = st.columns(2)
+with col_1:
+    st.markdown("#### Trabalho de grupo de Predictive Methods for Data Mining")
+    st.write("""
+    - Tomás
+    - Joana
+    - Diogo
+    - Miguel
+    - Miguel""")
+
+with col_2:
+    st.image('https://www.portaldalideranca.pt/images/news/Nova-IMS.jpg', width=300)
+
+
 
 

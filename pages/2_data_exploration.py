@@ -18,7 +18,7 @@ Original file is located at
 import sys
 import streamlit as st
 
-#verificar se estamos no colab ou não e importar coisas de acordo
+# verificar se estamos no colab ou não e importar coisas de acordo
 if 'google.colab' in sys.modules:
 
     # Connect Google Colab to Drive
@@ -39,6 +39,9 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
+from math import ceil
+
+from tqdm import tqdm
 
 # Page Setup
 st.set_page_config(
@@ -48,7 +51,8 @@ st.set_page_config(
 
 st.title("Data Exploration")
 
-radio_dataset = st.radio("Select Dataset:", ["Train", "Test"], horizontal=True)
+# selecionar entre Train e Test dataset 
+radio_dataset = st.radio("Select Dataset:", ("Train", "Test"), horizontal=True)
 
 if radio_dataset == "Train":
     full_path = path + "train.csv"
@@ -139,6 +143,54 @@ variaveis_numericas = list(df.select_dtypes(include=['int64','float64']).columns
 st.header('Variáveis numéricas')
 st.table(variaveis_numericas)
 
+def plot_multiple_histograms(data, feats, title="Numeric Variables' Histograms"):
+
+    # Prepare figure. Create individual axes where each histogram will be placed
+    fig, axes = plt.subplots(2, np.ceil(len(feats) / 2).astype(int), figsize=(20, 11))
+
+    # Plot data
+    # Iterate across axes objects and associate each histogram
+    for ax, feat in zip(axes.flatten(), feats):
+        ax.hist(data[feat])
+        ax.set_title(feat)
+
+    # Layout
+    # Add a centered title to the figure
+    fig.suptitle(title)
+
+    # Display the plot in Streamlit using st.pyplot()
+    st.pyplot(fig)
+
+    return
+
+
+## Define a function that plots multiple box plots
+
+def plot_multiple_boxplots(data, feats, title="Numeric Variables' Box Plots"):
+
+    # Prepare figure. Create individual axes where each boxplot will be placed
+    fig, axes = plt.subplots(2, np.ceil(len(feats) / 2).astype(int), figsize=(20, 11))
+
+    # Plot data
+    # Iterate across axes objects and associate each boxplot
+    for ax, feat in zip(axes.flatten(), feats):
+        sns.boxplot(x=data[feat], ax=ax)
+        ax.set_title(feat)
+
+    # Layout
+    # Add a centered title to the figure
+    fig.suptitle(title)
+
+    # Display the plot in Streamlit using st.pyplot()
+    st.pyplot(fig)
+
+    return
+
+sns.set()
+
+plot_multiple_histograms(df, variaveis_numericas)
+plot_multiple_boxplots(df, variaveis_numericas)
+
 variaveis_categoricas = list(df.select_dtypes(include='object').columns)
 st.header('Variáveis categóricas')
 st.table(variaveis_categoricas)
@@ -150,10 +202,15 @@ st.table(variaveis_booleanas)
 
 #pair plot
 st.header("Pairwise Relationship of Numerical Variables")
-sns.set()
-pairplot = sns.pairplot(df[variaveis_numericas], diag_kind="hist")
-pairplot.fig.subplots_adjust(top=0.95)
-pairplot.fig.suptitle("Pairwise Relationship of Numerical Variables", fontsize=20)
 
-# Display the plot in Streamlit
-st.pyplot(pairplot.fig)
+if st.checkbox('Executar Pairplot',value=False,) == True:
+    sns.set()
+    pairplot = sns.pairplot(df[variaveis_numericas], diag_kind="hist")
+    pairplot.fig.subplots_adjust(top=0.95)
+    pairplot.fig.suptitle("Pairwise Relationship of Numerical Variables", fontsize=20)
+
+    # Display the plot in Streamlit
+    st.pyplot(pairplot.fig)
+else:
+    st.write("Clicar para executar pairplot")
+
