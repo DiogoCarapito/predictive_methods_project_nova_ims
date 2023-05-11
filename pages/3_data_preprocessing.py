@@ -37,6 +37,8 @@ else:
 # Imports
 import pandas as pd
 import numpy as np
+import streamlit as st
+import csv
 import matplotlib.pyplot as plt
 import seaborn as sns
 
@@ -44,6 +46,8 @@ from sklearn.model_selection import train_test_split, KFold
 from sklearn.linear_model import LogisticRegression, LinearRegression
 from sklearn.impute import KNNImputer
 from sklearn.metrics import confusion_matrix, accuracy_score, precision_score, recall_score, r2_score, mean_absolute_error, mean_squared_error
+
+import inspect
 
 # Page Setup
 st.set_page_config(
@@ -83,7 +87,7 @@ variaveis_categoricas = list(df.select_dtypes(include='object').columns)
 # Dicionário de funções preprocesamento
 preprocessing_functions = {}
 
-"""# Errors"""
+# ERRORS
 
 # substituir FASE e FALSE por False e TRUE por True (booleanos)
 
@@ -103,7 +107,13 @@ def errors_mental_preparation(df):
     return df
 
 # juntar ao dicionário 
-preprocessing_functions['errors_mental_preparation'] = errors_mental_preparation
+preprocessing_functions['errors_mental_preparation'] = {
+    'function': errors_mental_preparation,
+    'description': 'substituir FASE e FALSE por False e TRUE por True',
+    'type': 'error',
+    'variables': ['Mental preparation'],
+    'code': inspect.getsource(errors_mental_preparation),
+}
 
 # substituir '0' por '0-35' no Age group ('0-35' é o mais frequente - 69,4%)
 # mas pode-se eliminar tmabém, pois corresponde a 0,13% dos dados
@@ -121,7 +131,13 @@ def errors_age_group(df):
     return df
 
 # juntar ao dicionário de funções
-preprocessing_functions['errors_age_group'] = errors_age_group
+preprocessing_functions['errors_age_group'] = {
+    'function': errors_age_group,
+    'description': "substituir '0' por '0-35' no Age group ('0-35' é o mais frequente - 69,4%)",
+    'type': 'error',
+    'variables':['Age group'],
+    'code': inspect.getsource(errors_age_group),
+}
 
 # Athlete score -30.0 passa a 0
 
@@ -130,7 +146,13 @@ def error_athelete_score_negative(df):
     return df
 
 # juntar ao dicionário de funções
-preprocessing_functions['error_athelete_score_negative'] = error_athelete_score_negative
+preprocessing_functions['error_athelete_score_negative'] = {
+    'function': error_athelete_score_negative,
+    'description': "Athlete score -30.0 passa a 0",
+    'type': 'error',
+    'variables':['Athlete score'],
+    'code': inspect.getsource(error_athelete_score_negative),
+}
 
 # Physiotherapy -50.0 passa a 0
 
@@ -139,7 +161,13 @@ def error_physiotherapy_negative(df):
     return df
 
 # juntar ao dicionário de funções
-preprocessing_functions['error_physiotherapy_negative'] = error_physiotherapy_negative
+preprocessing_functions['error_physiotherapy_negative'] = {
+    'function': error_physiotherapy_negative,
+    'description': "Physiotherapy -50.0 passa a 0",
+    'type': 'error',
+    'variables':['Physiotherapy'],
+    'code': inspect.getsource(error_physiotherapy_negative),
+}
 
 # Athlete score acima de 100 passa a 100 e abaixo de 0 fica 0
 
@@ -148,21 +176,30 @@ def error_athelete_score_over_100(df):
     return df
 
 # juntar ao dicionário de funções
-preprocessing_functions['error_athelete_score_over_100'] = error_athelete_score_over_100
+preprocessing_functions['error_athelete_score_over_100'] = {
+    'function': error_athelete_score_over_100,
+    'description': "Athlete score acima de 100 passa a 100 e abaixo de 0 fica 0",
+    'type': 'error',
+    'variables':['Athlete score'],
+    'code': inspect.getsource(error_athelete_score_over_100),
+}
 
 # Ver erros do df_test e colocar nas funções para serem corrigidos
+# apar3entemente não há necessidade...
 
-"""# Outliers"""
+# OUTLIERS
 
-"""# Missing Values"""
+# ainda falta lool
+
+# MISSING VALUES
 
 ## Número de eventos por variável categórica ('object')
 #para visaulizar os missing values e que valores são mais frequentes para poder substituir
 
-for each in df.select_dtypes(include='object').columns:
-    st.write(each)
-    st.write(df[each].value_counts(dropna=False))
-    st.write('')
+#for each in df.select_dtypes(include='object').columns:
+#    st.write(each)
+#    st.write(df[each].value_counts(dropna=False))
+#    st.write('')
 
 # Tratamento de missing values em variaveis categóricas pelo método de substituição por valor de maior frequência
 
@@ -182,7 +219,21 @@ def missing_categorical_substitute_highest_frequency(df):
     return df
 
 # juntar ao dicionário de funções
-preprocessing_functions['missing_categorical_substitute_highest_frequency'] = missing_categorical_substitute_highest_frequency
+preprocessing_functions['missing_categorical_substitute_highest_frequency'] = {
+    'function': missing_categorical_substitute_highest_frequency,
+    'description': "Tratamento de missing values em variaveis categóricas pelo método de substituição por valor de maior frequência",
+    'type': 'missing',
+    'variables':[
+        'Age group',
+        'Disability',
+        'Late enrollment',
+        'Cancelled enrollment',
+        'Mental preparation',
+        'Outdoor Workout',
+        'No coach',
+    ],
+    'code': inspect.getsource(missing_categorical_substitute_highest_frequency),
+}
 
 # Remover todos os missing values
 # Estratégia temporária só para teatar modelos até encontrar melhor solução
@@ -191,7 +242,13 @@ def missing_drop_all(df):
     return df.dropna()
 
 # juntar ao dicionário de funções
-preprocessing_functions['missing_drop_all'] = missing_drop_all
+preprocessing_functions['missing_drop_all'] = {
+    'function': missing_drop_all,
+    'description': "Remover todos os missing values",
+    'type': 'missing',
+    'variables':[],
+    'code': inspect.getsource(missing_drop_all),
+}
 
 # Numericos
 # KNN
@@ -199,7 +256,7 @@ preprocessing_functions['missing_drop_all'] = missing_drop_all
 # Categoricos
 # KNN
 
-"""# Feature Engineering"""
+#FEATURE ENGINEERING
 
 # eventualmente trasfomrmar em booleano?
 # a logica é se existir a presença destes, então isso basta.
@@ -220,7 +277,18 @@ def engineer_skewed_data(df):
     return df
 
 # juntar ao dicionário de funções
-preprocessing_functions['engineer_skewed_data'] = engineer_skewed_data
+preprocessing_functions['engineer_skewed_data'] = {
+    'function': engineer_skewed_data,
+    'description': "transformar varias variaveis muito skewed em 0 e 1",
+    'type': 'engineer',
+    'variables':[
+        'Previous attempts',
+        'Sand training',
+        'Plyometric training',
+        'Other training',
+        ],
+    'code': inspect.getsource(engineer_skewed_data),
+}
 
 # Criar uma variável chamada Total Training
 # É uma soma de Cardiovascular training, Other training, Plyometric training, Sand training, Sport-specific training, Squad training, Strength training
@@ -241,7 +309,21 @@ def engineer_total_training(df):
     return df
 
 # juntar ao dicionário de funções
-preprocessing_functions['engineer_total_training'] = engineer_total_training
+preprocessing_functions['engineer_total_training'] = {
+    'function': engineer_total_training,
+    'description': "Criar uma variável chamada Total Training. É uma soma de Cardiovascular training, Other training, Plyometric training, Sand training, Sport-specific training, Squad training, Strength training",
+    'type': 'engineer',
+    'variables':[
+        'Cardiovascular training',
+        'Other training',
+        'Plyometric training',
+        'Sand training',
+        'Sport-specific training',
+        'Squad training',
+        'Strength training'
+        ],
+    'code': inspect.getsource(engineer_total_training),
+}
 
 # Region simplification em continentes
 
@@ -265,7 +347,13 @@ def engineer_region_by_continent(df):
     return df
 
 # juntar ao dicionário de funções
-preprocessing_functions['engineer_region_by_continent'] = engineer_region_by_continent
+preprocessing_functions['engineer_region_by_continent'] = {
+    'function': engineer_region_by_continent,
+    'description': "Region simplification em continentes",
+    'type': 'engineer',
+    'variables':['Region'],
+    'code': inspect.getsource(engineer_region_by_continent),
+}
 
 # simplificação das competiçoe em nacional e internacional
 
@@ -285,7 +373,13 @@ def engineer_competition_national_international(df):
     return df
 
 # juntar ao dicionário de funções
-preprocessing_functions['engineer_competition_national_international'] = engineer_competition_national_international
+preprocessing_functions['engineer_competition_national_international'] = {
+    'function': engineer_competition_national_international,
+    'description': "simplificação das competiçoe em nacional e internacional",
+    'type': 'engineer',
+    'variables':['Competition'],
+    'code': inspect.getsource(engineer_competition_national_international),
+}
 
 # simplificação das competiçoe em local, nacional e internacional
 
@@ -305,9 +399,15 @@ def engineer_competition_local_national_international(df):
     return df
 
 # juntar ao dicionário de funções
-preprocessing_functions['engineer_competition_local_national_international'] = engineer_competition_local_national_international
+preprocessing_functions['engineer_competition_local_national_international'] = {
+    'function': engineer_competition_local_national_international,
+    'description': "simplificação das competiçoe em local, nacional e internacional",
+    'type': 'engineer',
+    'variables':['Competition'],
+    'code': inspect.getsource(engineer_competition_local_national_international),
+}
 
-"""# Encoding"""
+#ENCODING
 
 # transformar True e False em 1 e 0
 
@@ -331,7 +431,20 @@ def encoding_true_false_to_1_0(df):
     return df
 
 # juntar ao dicionário de funções
-preprocessing_functions['encoding_true_false_to_1_0'] = encoding_true_false_to_1_0
+preprocessing_functions['encoding_true_false_to_1_0'] = {
+    'function': encoding_true_false_to_1_0,
+    'description': "transformar True e False em 1 e 0",
+    'type': 'encoding',
+    'variables':[
+        'Past injuries',
+        'Outdoor Workout',
+        'Mental preparation',
+        'Cancelled enrollment',
+        'Late enrollment',
+        'Disability',
+    ],
+    'code': inspect.getsource(encoding_true_false_to_1_0),
+}
 
 # One Hot Encoding categorical
 
@@ -362,9 +475,22 @@ def encoding_one_hot_encoding_categorical(df):
     return df_merged
 
 # juntar ao dicionário de funções
-preprocessing_functions['encoding_one_hot_encoding_categorical'] = encoding_one_hot_encoding_categorical
+preprocessing_functions['encoding_one_hot_encoding_categorical'] = {
+    'function': encoding_one_hot_encoding_categorical,
+    'description': "One Hot Encoding categorical",
+    'type': 'encoding',
+    'variables':[
+        'Competition',
+        'Region',
+        'Education',
+        'Age group',
+        'Income',
+        'Sex',
+        ],
+    'code': inspect.getsource(encoding_one_hot_encoding_categorical),
+}
 
-"""# Scaling"""
+#SCALING
 
 # Transformação de variáveis para o logaritmo para tratar skewness
 
@@ -387,14 +513,34 @@ def scaling_log_numerical(df):
 
     for variable in log_transforms:
         # aplicação do logaritmo
-        df[variable+'_LOG'] = np.log(df[variable]+0.01)
-        
-        # gravar nova variável na lista de variáveis numericas
-        variaveis_numericas.append(variable + "_LOG")
+        try:
+            df[variable] = np.log(df[variable]+0.01)
+        except:
+            pass
+
     return df
 
 # juntar ao dicionário de funções
-preprocessing_functions['scaling_log_numerical'] = scaling_log_numerical
+preprocessing_functions['scaling_log_numerical'] = {
+    'function': scaling_log_numerical,
+    'description': "Transformação de variáveis para o logaritmo para tratar skewness",
+    'type': 'scaling',
+    'variables':[
+        'Train bf competition',
+        'Strength training',
+        'Sand training',
+        'Recovery',
+        'Supplements',
+        'Cardiovascular training',
+        'Squad training',
+        'Physiotherapy',
+        'Plyometric training',
+        'Sport-specific training',
+        'Other training',
+        'Total training'
+        ],
+    'code': inspect.getsource(scaling_log_numerical),
+}
 
 # Transformação de variáveis para a raiz quadrada para tratar skewness
 def scaling_sqrt_numerical(df):
@@ -415,15 +561,35 @@ def scaling_sqrt_numerical(df):
         'Total training']
 
     for variable in sqrt_transforms:
-        # aplicação do logaritmo
-        df[variable+'_SQRT'] = np.sqrt(df[variable])
-        
-        # gravar nova variável na lista de variáveis numericas
-        variaveis_numericas.append(variable + "_SQRT")
+        # aplicação do sqrt
+        try:
+            df[variable] = np.sqrt(df[variable])
+        except:
+            pass
+
     return df
 
 # juntar ao dicionário de funções
-preprocessing_functions['scaling_sqrt_numerical'] = scaling_sqrt_numerical
+preprocessing_functions['scaling_sqrt_numerical'] = {
+    'function': scaling_sqrt_numerical,
+    'description': "Transformação de variáveis para a raiz quadrada para tratar skewness",
+    'type': 'scaling',
+    'variables':[
+        'Train bf competition',
+        'Strength training',
+        'Sand training',
+        'Recovery',
+        'Supplements',
+        'Cardiovascular training',
+        'Squad training',
+        'Physiotherapy',
+        'Plyometric training',
+        'Sport-specific training',
+        'Other training',
+        'Total training'
+        ],
+    'code': inspect.getsource(scaling_sqrt_numerical),
+}
 
 # normalização com MinMax
 from sklearn.preprocessing import MinMaxScaler
@@ -448,9 +614,15 @@ def scaling_numerical_min_max(df):
     return df
 
 # juntar ao dicionário de funções
-preprocessing_functions['scaling_numerical_min_max'] = scaling_numerical_min_max
+preprocessing_functions['scaling_numerical_min_max'] = {
+    'function': scaling_numerical_min_max,
+    'description': "normalização com MinMax",
+    'type': 'scaling',
+    'variables':variaveis_numericas,
+    'code': inspect.getsource(scaling_numerical_min_max),
+}
 
-"""# Selection"""
+#SELECTION
 
 # deixar cair No Coach por só ter 2 valores positivos, vatiável quase uniforme
 def selection_no_coach_drop(df):
@@ -460,56 +632,63 @@ def selection_no_coach_drop(df):
         return df
 
 # juntar ao dicionário de funções
-preprocessing_functions['selection_no_coach_drop'] = selection_no_coach_drop
+preprocessing_functions['selection_no_coach_drop'] = {
+    'function': selection_no_coach_drop,
+    'description': "deixar cair No Coach por só ter 2 valores positivos, vatiável quase uniforme",
+    'type': 'selection',
+    'variables':'No coach',
+    'code': inspect.getsource(selection_no_coach_drop),
+}
 
-"""# Pipeline"""
 
 # mostrar todas as funções existentes
 # Pronto para copiar par uma lista, até tem a virgula e tudo xD
 if 'preprocessing_func_list' not in st.session_state:
     st.session_state['preprocessing_func_list'] = {}
 
-for each in list(preprocessing_functions.keys()):
-    st.session_state['preprocessing_func_list'][each] = st.checkbox(each)
+tab_function_description, tab_function_selection = st.tabs(['Descrição', 'Seleção'])
 
-preprocessing_function_list = []
-for key in st.session_state['preprocessing_func_list']:
-    if st.session_state['preprocessing_func_list'][key] == True:
-        preprocessing_function_list.append(preprocessing_functions[key])
+with tab_function_description:
+    for key, value in preprocessing_functions.items():
+        st.subheader(key)
+        st.write('**Descrição**: ' + value['description'])
+        st.code(value['code'], language = 'python')
 
-# Definição de um pipleine
-# deve ser passado um dataframe para ser processado
-# e uma lista de funções para serem executadas por ordem
+with tab_function_selection:
+    for key, value in preprocessing_functions.items():
+        st.session_state['preprocessing_func_list'][key] = st.checkbox(key)
 
-def pileline(df,function_list):
-    # iteração pelas funçoes da lista
-    for func in function_list:
-        # execução da função
-        df = func(df)
-    return df
+    preprocessing_function_list = []
+    for key in st.session_state['preprocessing_func_list']:
+        if st.session_state['preprocessing_func_list'][key] == True:
+            preprocessing_function_list.append(preprocessing_functions[key]['function'])
 
-# Pileine 1
 
-# definir quais funções entram no pipeline
-func_list_1 = [
-    errors_mental_preparation,
-    errors_age_group, 
-    error_athelete_score_negative,
-    error_physiotherapy_negative,
-    error_athelete_score_over_100,
-    missing_categorical_substitute_highest_frequency,
-    missing_drop_all,
-    engineer_skewed_data,
-    engineer_region_by_continent,
+    # Definição de um pipleine
+    # deve ser passado um dataframe para ser processado
+    # e uma lista de funções para serem executadas por ordem
 
-    engineer_competition_local_national_international,
-    encoding_true_false_to_1_0,
-    encoding_one_hot_encoding_categorical,
-    scaling_numerical_min_max,
-    selection_no_coach_drop,
-]
+    def pileline(df,function_list):
+        # iteração pelas funçoes da lista
+        for func in function_list:
+            # execução da função
+            df = func(df)
+        return df
 
-# Aplicar pipeline ao df_train com a lista de funções 1
-df_preprocessed_1 = pileline(df,preprocessing_function_list)
+    # Aplicar pipeline ao df_train com a lista de funções 1
+    df_preprocessed_1 = pileline(df,preprocessing_function_list)
 
-st.dataframe(df_preprocessed_1.head())
+    st.write('')
+    st.dataframe(df_preprocessed_1.head())
+
+    st.write(f"Total de dados: **{df.shape[0]}**")
+    st.write(f"Total de dados sem missing values: **{df.dropna().shape[0]}**")
+    st.write(f"Percentagem de linhas com missing values: **{round(100 * (1 - df.dropna().shape[0] / df.shape[0]), 2)}%**")
+
+    if st.button('Guardar seleção de funções'):
+        with open('funct_list.csv', 'w', newline='') as file:
+            writer = csv.writer(file)
+
+            # Write the list to the CSV file
+            writer.writerow(preprocessing_function_list)
+        st.success('Guardado em funct_list.csv', icon="✅")
