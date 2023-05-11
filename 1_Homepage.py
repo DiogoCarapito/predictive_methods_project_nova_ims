@@ -10,6 +10,6 @@ st.set_page_config(
 # page title
 st.title("PMDM Grupo 11")
 
-
+st.write("")
 
 
