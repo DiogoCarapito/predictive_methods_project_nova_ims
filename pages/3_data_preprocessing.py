@@ -154,8 +154,6 @@ preprocessing_functions['error_athelete_score_over_100'] = error_athelete_score_
 
 """# Outliers"""
 
-
-
 """# Missing Values"""
 
 ## Número de eventos por variável categórica ('object')
