@@ -41,8 +41,6 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from math import ceil
 
-from tqdm import tqdm
-
 # Page Setup
 st.set_page_config(
     page_title="PMDM Grupo 11",
