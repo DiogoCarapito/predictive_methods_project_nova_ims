@@ -36,9 +36,16 @@ from sklearn.preprocessing import MinMaxScaler
 from sklearn.impute import KNNImputer
 from sklearn.metrics import confusion_matrix, accuracy_score, precision_score, recall_score, r2_score, \
     mean_absolute_error, mean_squared_error
+from sklearn.model_selection import train_test_split
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.metrics import f1_score
 
 #from itertools import product
 
+st.set_page_config(
+    page_title="PMDM Grupo 11",
+    page_icon=":sports_medal:",
+    layout="wide")
 
 # Page Setup
 st.title("Model Selection")
@@ -50,15 +57,20 @@ tab_logistic, tab_decision_tree, tab_ensambles, tab_neural_network =  st.tabs(['
 df_train = pd.read_csv(path + 'train.csv')
 df_test = pd.read_csv(path + 'test.csv')
 
+df_train.set_index('RecordID', inplace=True)
+df_train.index.name = 'RecordID'
+
+df_test.set_index('RecordID', inplace=True)
+df_train.index.name = 'RecordID'
+
 # Lista de variáveis
 target = 'Outcome'
 
-variaveis_nao_uteis = [
-    'RecordID',
-    'Athlete Id'
-]
+variaveis_nao_uteis = ['Athlete Id']
 
 variaveis_numericas = list(df_train.drop(variaveis_nao_uteis, axis=1).select_dtypes(include=['int', 'float']).columns)
+variaveis_numericas.remove(target)
+
 
 variaveis_booleanas = [
     'Disability',
@@ -97,7 +109,6 @@ preprocessing_functions = {}
 
 # remover varaiveis não úteis no modelo preditivo
 def remove_ids(df):
-    variaveis_nao_uteis = ['RecordID', 'Athlete Id']
     df = df.drop(variaveis_nao_uteis, axis=1)
     return df
 # juntar ao dicionário
@@ -105,7 +116,7 @@ preprocessing_functions['remove_ids'] = {
     'function': remove_ids,
     'description': 'remover varaiveis não úteis no modelo preditivo',
     'type': 'remove',
-    'variables': ['RecordID', 'Athlete Id'],
+    'variables': variaveis_nao_uteis,
     'code': inspect.getsource(remove_ids),
 }
 
@@ -141,8 +152,18 @@ def error_false_true(df):
         'FALSE': False,
         'TRUE': True,
     }
-    # df['Mental preparation'] = df['Mental preparation'].apply(lambda x: substitutes.get(x, x))
-    df = df.replace(substitutes)
+    columns_to_replace = [
+        'Mental preparation'
+        'Disability',
+        'Late enrollment',
+        'Cancelled enrollment',
+        'Mental preparation',
+        'Outdoor Workout',
+        'No coach',
+        'Past injuries'
+    ]
+    for column in columns_to_replace:
+        df[column] = df[column].replace(substitutes)
     return df
 # juntar ao dicionário
 preprocessing_functions['error_false_true'] = {
@@ -162,7 +183,6 @@ def error_age_group(df):
     substitute = {
         '0': '0-35',
     }
-
     # substituição
     # df['Age group'] = df['Age group'].apply(lambda x: substitutes.get(x, x))
     df['Age group'] = df['Age group'].replace(substitute)
@@ -589,32 +609,6 @@ preprocessing_functions['engineer_physiotherapy_to_boolean'] = {
 
 # ENCODING
 
-# transformar True e False em 1 e 0
-def encoding_true_false_to_1_0(df):
-    #  lista de variaveis a tratar
-    list_true_false_to_1_0 = list(df_train.select_dtypes(include='bool').columns)
-
-    # iteração sobre variaveis
-    for variable in list_true_false_to_1_0:
-        # substituição de valores acima de 0 para 1
-        df[variable] = df[variable].replace({True: 1, False: 0})
-
-    return df
-# juntar ao dicionário de funções
-preprocessing_functions['encoding_true_false_to_1_0'] = {
-    'function': encoding_true_false_to_1_0,
-    'description': "transformar True e False em 1 e 0",
-    'type': 'encoding',
-    'variables': [
-        'Past injuries',
-        'Outdoor Workout',
-        'Mental preparation',
-        'Cancelled enrollment',
-        'Late enrollment',
-        'Disability',
-    ],
-    'code': inspect.getsource(encoding_true_false_to_1_0),
-}
 
 
 # One Hot Encoding categorical
@@ -652,6 +646,35 @@ preprocessing_functions['encoding_one_hot_encoding_categorical'] = {
     ],
     'code': inspect.getsource(encoding_one_hot_encoding_categorical),
 }
+
+
+# transformar True e False em 1 e 0
+def encoding_true_false_to_1_0(df):
+    #  lista de variaveis a tratar
+    list_true_false_to_1_0 = list(df.select_dtypes(include='bool').columns)
+    st.write(list_true_false_to_1_0)
+    # iteração sobre variaveis
+    for variable in list_true_false_to_1_0:
+        # substituição de valores acima de 0 para 1
+        df[variable] = df[variable].replace({True: 1, False: 0})
+
+    return df
+# juntar ao dicionário de funções
+preprocessing_functions['encoding_true_false_to_1_0'] = {
+    'function': encoding_true_false_to_1_0,
+    'description': "transformar True e False em 1 e 0",
+    'type': 'encoding',
+    'variables': [
+        'Past injuries',
+        'Outdoor Workout',
+        'Mental preparation',
+        'Cancelled enrollment',
+        'Late enrollment',
+        'Disability',
+    ],
+    'code': inspect.getsource(encoding_true_false_to_1_0),
+}
+
 
 
 # SCALING
@@ -814,15 +837,137 @@ def pileline(df, function_list):
     # iteração pelas funçoes da lista
     for func in function_list:
         # execução da função
-        df = func(df)
+        df = preprocessing_functions[func]['function'](df)
     return df
+
+
+
+
+st.session_state['pre_split_preprocessing_functions'] = {each: False for each in preprocessing_functions.keys()}
+st.session_state['post_split_preprocessing_functions'] = {each: False for each in preprocessing_functions.keys()}
+func_list = [each for each in preprocessing_functions.keys()]
+
+
+
+def pre_split_func_selection():
+    with st.expander("PRE Split Preprocessing Functions selection"):
+        for each in func_list:
+            st.session_state['pre_split_preprocessing_functions'][each] = st.checkbox(each, value=st.session_state['pre_split_preprocessing_functions'][each],key='pre_'+each)
+        selected_pre_split_func_list = [key for key, value in  st.session_state['pre_split_preprocessing_functions'].items() if value is True]
+    return selected_pre_split_func_list
+
+def post_split_func_selection():
+    with st.expander("POST Split Preprocessing Functions selection"):
+        for each in func_list:
+            st.session_state['post_split_preprocessing_functions'][each] = st.checkbox(each, value=st.session_state['post_split_preprocessing_functions'][each], key='post_'+each)
+        selected_post_split_func_list = [key for key, value in  st.session_state['post_split_preprocessing_functions'].items() if value is True]
+    return selected_post_split_func_list
+
+
+def avg_score_LR(df, pre_func_list, post_func_list):
+
+
+
+    score_train = []
+    score_test = []
+
+    # Separar X e y
+    X = df.loc[:, df.columns != 'Outcome']
+    y = df['Outcome']
+
+    # Apply pre-split preprocessing functions
+    X = pileline(X, pre_func_list)
+
+    # method: KFold
+    for train_index, test_index in KFold(n_splits=5).split(X):
+        X_train, X_test = X.iloc[train_index], X.iloc[test_index]
+        y_train, y_test = y.iloc[train_index], y.iloc[test_index]
+
+        # Apply post-split preprocessing functions
+        X_train = pileline(X, post_func_list)
+
+        # run_model_LR function
+        model = LogisticRegression().fit(X_train, y_train)
+
+        # evaluate_model function
+        value_train = model.score(X_train, y_train)
+        value_test = model.score(X_test, y_test)
+
+        # append scores
+        score_train.append(value_train)
+        score_test.append(value_test)
+
+    # calculate mean scores
+    mean_score_train = np.mean(score_train)
+    mean_score_test = np.mean(score_test)
+
+    return (mean_score_train, mean_score_test)
+
+
+
+def simple_logistic_regresssion(df, pre_split_functions, post_split_functions):
+
+
+
+    # Apply pre-split preprocessing functions
+    df = pileline(df, pre_split_functions)
+
+    # split X and y
+    X = df.loc[:, df.columns != 'Outcome']
+    y = df['Outcome']
+
+    # Split the dataset into training and testing sets
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=5)
+
+    # Apply post-split preprocessing functions
+    X_train = pileline(X_train, post_split_functions)
+
+    X_train = X_train.drop('Past injuries', axis=1)
+    X_test = X_test.drop('Past injuries', axis=1)
+
+    st.table(X_train.head(5))
+    st.table(X_train.describe(include='all').T)
+    st.table(X_train.dtypes)
+
+    model = LogisticRegression()
+    model.fit(X_train, y_train)
+    predictions = model.predict(X_test)
+    accuracy = accuracy_score(y_test, predictions)
+
+    return accuracy
+
 
 
 
 # Tabs para cada modelo
 with tab_logistic:
     st.header("Logistic Regression")
-    st.write(preprocessing_functions)
+    col_prepro_1, col_prepro_2 = st.columns(2)
+    with col_prepro_1:
+        pre_split_functions = pre_split_func_selection()
+    with col_prepro_2:
+        post_split_functions = post_split_func_selection()
+
+
+    #for each in pre_split_functions:
+        #st.write(preprocessing_functions[each]['function'](df_train))
+    #st.write(pre_split_functions)
+    #st.write(post_split_functions)
+    #st.write(st.session_state['pre_split_preprocessing_functions'])
+
+    #scores = avg_score_LR(df_train, pre_split_functions, post_split_functions)
+
+    score = simple_logistic_regresssion(df_train, pre_split_functions, post_split_functions)
+
+
+    st.metric(label="Score", value=score)
+
+
+    #st.metric(label="Train Score", value=scores[0])
+    #st.metric(label="Test Score", value=scores[1])
+
+    if st.button('Save'):
+        st.success('Saved')
 
 with tab_decision_tree:
     st.header("Decision Tree")
@@ -833,6 +978,9 @@ with tab_ensambles:
 with tab_neural_network:
     st.header("Neural Networks")
 
+
+
+"""
 
 
 #st.write(df_train.describe(include='object'))
@@ -851,20 +999,20 @@ with tab_neural_network:
 
 # variaveis_categoricas = list(df_train.drop(variaveis_nao_uteis,axis=1).select_dtypes(include="object").columns)
 
-if test_mode is True:
-    print('variaveis_numericas =', variaveis_numericas)
-    print('variaveis_booleanas =', variaveis_booleanas)
-    print('variaveis_categoricas =', variaveis_categoricas)
-    print('variaveis_nao_uteis', variaveis_nao_uteis)
-    print('target =', target)
+#if test_mode is True:
+    #print('variaveis_numericas =', variaveis_numericas)
+    #print('variaveis_booleanas =', variaveis_booleanas)
+    #print('variaveis_categoricas =', variaveis_categoricas)
+    #print('variaveis_nao_uteis', variaveis_nao_uteis)
+    #print('target =', target)
 
 
 
 
 # mostrar todas as funções existentes
 # Pronto para copiar par uma lista, até tem a virgula e tudo xD
-if test_mode is True:
-    for each in list(preprocessing_functions.keys()): print(each + ',')
+#if test_mode is True:
+    #for each in list(preprocessing_functions.keys()): print(each + ',')
 
 # Pileine 1
 
@@ -925,57 +1073,22 @@ df_train_preprocessed.describe()
 # df_train_preprocessed.select_dtypes(include='bool')
 df_train_preprocessed['Physiotherapy']
 
-"""____
+
 
 # Model Evaluation
-"""
+
 
 X = df_train_preprocessed.loc[:, df_train_preprocessed.columns != 'Outcome']
 y = df_train_preprocessed['Outcome']
 
 X = X.drop(list(df_train_preprocessed.select_dtypes(include='object').columns), axis=1)
 
-if test_mode is True:
-    X.describe()
 
 
-def run_model_LR(X, y):
-    model = LogisticRegression().fit(X, y)
-    return model
-
-
-def evaluate_model(X, y, model):
-    return model.score(X, y)
-
-
-kf = KFold(n_splits=5)
-
-
-def avg_score_LR(method, X, y):
-    score_train = []
-    score_test = []
-
-    # method: KFold
-    for train_index, test_index in method.split(X):
-        X_train, X_test = X.iloc[train_index], X.iloc[test_index]
-        y_train, y_test = y.iloc[train_index], y.iloc[test_index]
-
-        # run_model_LR function
-        model = run_model_LR(X_train, y_train)
-
-        # evaluate_model function
-        value_train = evaluate_model(X_train, y_train, model)
-        value_test = evaluate_model(X_test, y_test, model)
-
-        score_train.append(value_train)
-        score_test.append(value_test)
-    if test_mode is True:
-        print('Train:', np.mean(score_train))
-        print('Test:', np.mean(score_test))
 
 
 # Step 12
-print(avg_score_LR(kf, X, y))
+#print(avg_score_LR())
 
 # from joblib import dump
 # dump(avg_score_LR(kf, X, y), 'model.joblib')
@@ -1006,8 +1119,8 @@ func_list_test = [
     # engineer_competition_national_international,
     engineer_competition_local_national_international,
     # engineer_physiotherapy_to_boolean,
-    # encoding_true_false_to_1_0,
     encoding_one_hot_encoding_categorical,
+    # encoding_true_false_to_1_0,
     scaling_log_numerical,
     # scaling_sqrt_numerical,
     scaling_numerical_min_max,
@@ -1025,7 +1138,7 @@ predictions = model.predict(predictions)
 
 predictions.head()
 
-"""## sem KNN
+## sem KNN
 Train: 0.5964166980619595
 
 Test: 0.5964167072248073
@@ -1041,11 +1154,10 @@ Test: 0.7349729896614462
 Train: 0.7340391412411208
 
 Test: 0.7341691018897331
-"""
 
 # Cross Validation
 
-"""Regressão linear
+Regressão linear
 Regressão ligistica
 
 Naive Bayes
@@ -1054,7 +1166,7 @@ Decision tree
 
 Ensemble Algorithms
 - 
-"""
+
 
 '''import itertools
 
@@ -1070,9 +1182,7 @@ print(combination_func_list)'''
 
 # Decision Tree
 
-from sklearn.model_selection import train_test_split
-from sklearn.tree import DecisionTreeClassifier
-from sklearn.metrics import accuracy_score, f1_score
+
 
 func_list_decision_tree = [
     remove_ids,
@@ -1156,3 +1266,6 @@ plot_feature_importances(clf)
 # Pronto para copiar par uma lista, até tem a virgula e tudo xD
 if test_mode is True:
     for each in list(preprocessing_functions.keys()): print(each + ',')
+
+
+"""
