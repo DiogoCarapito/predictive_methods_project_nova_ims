@@ -54,18 +54,18 @@ st.set_page_config(
     page_icon=":sports_medal:",
     layout="wide")
 
+if 'accuracy' not in st.session_state: st.session_state['accuracy'] = np.nan
+if 'precision' not in st.session_state: st.session_state['precision'] = np.nan
+if 'recall' not in st.session_state: st.session_state['recall'] = np.nan
+if 'f1' not in st.session_state: st.session_state['f1'] = np.nan
+if 'accuracy_val' not in st.session_state: st.session_state['accuracy_val'] = np.nan
+if 'precision_val' not in st.session_state: st.session_state['precision_val'] = np.nan
+if 'recall_val' not in st.session_state: st.session_state['recall_val'] = np.nan
+if 'f1_val' not in st.session_state: st.session_state['f1_val'] = np.nan
 
 def reset_session_state():
     st.session_state['final_predictions'] = pd.DataFrame(columns=['Outcome'])
 
-    st.session_state['accuracy'] = np.nan
-    st.session_state['precision'] = np.nan
-    st.session_state['recall'] = np.nan
-    st.session_state['f1'] = np.nan
-    st.session_state['accuracy_val'] = np.nan
-    st.session_state['precision_val'] = np.nan
-    st.session_state['recall_val'] = np.nan
-    st.session_state['f1_val'] = np.nan
     st.session_state['lr_solver'] = np.nan
 
     st.session_state['knn_n_neighbors'] = np.nan
@@ -612,33 +612,33 @@ if st.button("Run Model", type="primary"):
     st.session_state['f1_val'] = round(100*np.mean(f1_val),2)
 
 
-st.subheader('Test Performance')
-col_metrics_1, col_metrics_2, col_metrics_3, col_metrics_4 = st.columns(4)
-with col_metrics_1: st.metric('Accuracy', str(st.session_state['accuracy'])+'%')
-with col_metrics_2: st.metric('Precision', str(st.session_state['precision'])+'%')
-with col_metrics_3: st.metric('Recall', str(st.session_state['recall'])+'%')
-with col_metrics_4: st.metric('F1', str(st.session_state['f1'])+'%')
+    st.subheader('Test Performance')
+    col_metrics_1, col_metrics_2, col_metrics_3, col_metrics_4 = st.columns(4)
+    with col_metrics_1: st.metric('Accuracy', str(st.session_state['accuracy'])+'%')
+    with col_metrics_2: st.metric('Precision', str(st.session_state['precision'])+'%')
+    with col_metrics_3: st.metric('Recall', str(st.session_state['recall'])+'%')
+    with col_metrics_4: st.metric('F1', str(st.session_state['f1'])+'%')
 
-st.subheader('Validation Performance')
-col_metrics_val_1, col_metrics_val_2, col_metrics_val_3, col_metrics_val_4 = st.columns(4)
+    st.subheader('Validation Performance')
+    col_metrics_val_1, col_metrics_val_2, col_metrics_val_3, col_metrics_val_4 = st.columns(4)
 
-with col_metrics_val_1:
-    st.metric('Accuracy', str(st.session_state['accuracy_val']) + '%', str(round(st.session_state['accuracy_val']-st.session_state['accuracy'], 2))+"%")
-with col_metrics_val_2:
-    st.metric('Precision', str(st.session_state['precision_val']) + '%', str(round(st.session_state['precision_val']-st.session_state['precision'], 2))+"%")
-with col_metrics_val_3:
-    st.metric('Recall', str(st.session_state['recall_val']) + '%', str(round(st.session_state['recall_val']-st.session_state['recall'], 2))+"%")
-with col_metrics_val_4:
-    st.metric('F1', str(st.session_state['f1_val']) + '%', str(round(st.session_state['f1_val']-st.session_state['f1'], 2))+"%")
+    with col_metrics_val_1:
+        st.metric('Accuracy', str(st.session_state['accuracy_val']) + '%', str(round(st.session_state['accuracy_val']-st.session_state['accuracy'], 2))+"%")
+    with col_metrics_val_2:
+        st.metric('Precision', str(st.session_state['precision_val']) + '%', str(round(st.session_state['precision_val']-st.session_state['precision'], 2))+"%")
+    with col_metrics_val_3:
+        st.metric('Recall', str(st.session_state['recall_val']) + '%', str(round(st.session_state['recall_val']-st.session_state['recall'], 2))+"%")
+    with col_metrics_val_4:
+        st.metric('F1', str(st.session_state['f1_val']) + '%', str(round(st.session_state['f1_val']-st.session_state['f1'], 2))+"%")
 
 
-st.write("----")
+    st.write("----")
 
-col_outcome_1, col_outcome_2 = st.columns(2)
-with col_outcome_1:
-    st.metric("Number of Outcome = 1", str(len(st.session_state['final_predictions'][st.session_state['final_predictions']['Outcome']==1])))
-with col_outcome_2:
-    st.metric("Number of Outcome = 0", str(len(st.session_state['final_predictions'][st.session_state['final_predictions']['Outcome']==0])))
+    col_outcome_1, col_outcome_2 = st.columns(2)
+    with col_outcome_1:
+        st.metric("Number of Outcome = 1", str(len(st.session_state['final_predictions'][st.session_state['final_predictions']['Outcome']==1])))
+    with col_outcome_2:
+        st.metric("Number of Outcome = 0", str(len(st.session_state['final_predictions'][st.session_state['final_predictions']['Outcome']==0])))
 
 
 
@@ -708,9 +708,9 @@ model_performance_record = pd.DataFrame({
 
 })
 
-reset_session_state()
+    #reset_session_state()
 
-st.table(model_performance_record)
+    #st.table(model_performance_record)
 
 col_button_1, col_button_2 = st.columns(2)
 with col_button_1:

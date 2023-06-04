@@ -1,10 +1,4 @@
 Date,Model,Accuracy,Precision,Recall,F1,Accuracy_val,Precision_val,Recall_val,F1_val,Number of Outcome = 1,Number of Outcome = 0,num_knn,transform,cross_validation,cross_validation_splits,rfe,num_features,lr_solver,knn_n_neighbors,dt_max_depth,dt_max_leaf_nodes,rf_criterion,rf_max_depth,rf_max_leaf_nodes,ensemble,bagging,bagging_dt_criterion,bagging_dt_max_depth,bagging_max_leaf_nodes,bagging_rf_criterion,bagging_rf_max_depth,bagging_rf_max_leaf_nodes,boosting,boosting_dt_criterion,boosting_dt_max_depth,boosting_max_leaf_nodes,boosting_rf_criterion,boosting_rf_max_depth,boosting_rf_max_leaf_nodes,nn_solver,nn_activation,nn_hidden_layer_sizes,nn_max_iter,nn_learning_rate_init,nn_learning_rate
-04/06/2023 11:45:06,Logistic Regression,[],[],[],[],[],[],[],[],0,0,5,Logarithm,True,5 splits,False,10,lbfgs,,,,,,,,,,,,,,,,,,,,,,,,,,,
-04/06/2023 11:45:34,Logistic Regression,[],[],[],[],[],[],[],[],0,0,5,Logarithm,True,5 splits,False,10,lbfgs,,,,,,,,,,,,,,,,,,,,,,,,,,,
-04/06/2023 11:49:59,Logistic Regression,[],[],[],[],[],[],[],[],0,0,5,Logarithm,True,5 splits,False,10,lbfgs,,,,,,,,,,,,,,,,,,,,,,,,,,,
-04/06/2023 11:52:24,KNN,[],[],[],[],[],[],[],[],0,0,5,Logarithm,True,2 splits,False,10,,5,,,,,,,,,,,,,,,,,,,,,,,,,,
-04/06/2023 12:06:04,Logistic Regression,,,,,,,,,0,0,5,Logarithm,True,5 splits,False,10,lbfgs,,,,,,,,,,,,,,,,,,,,,,,,,,,
-04/06/2023 12:08:08,Logistic Regression,,,,,,,,,0,0,5,Logarithm,True,5 splits,False,10,lbfgs,,,,,,,,,,,,,,,,,,,,,,,,,,,
-04/06/2023 12:11:40,Logistic Regression,,,,,,,,,0,0,5,Logarithm,True,5 splits,False,10,lbfgs,,,,,,,,,,,,,,,,,,,,,,,,,,,
-04/06/2023 12:12:54,Logistic Regression,,,,,,,,,0,0,5,Logarithm,True,5 splits,False,10,lbfgs,,,,,,,,,,,,,,,,,,,,,,,,,,,
-04/06/2023 12:14:22,Logistic Regression,,,,,,,,,0,0,5,Logarithm,True,5 splits,False,10,lbfgs,,,,,,,,,,,,,,,,,,,,,,,,,,,
+04/06/2023 15:00:36,Logistic Regression,85.19,86.34,89.32,87.8,84.51,86.07,88.35,87.19,0,0,5,Logarithm,True,5 splits,False,10,lbfgs,,,,,,,,,,,,,,,,,,,,,,,,,,,
+04/06/2023 15:02:27,Neural Network,81.53,85.3,84.19,83.88,81.76,84.97,84.9,84.26,0,0,5,Logarithm,True,10 splits,True,20,,,,,,,,,,,,,,,,,,,,,,,adam,relu,10,143,0.03,constant
+04/06/2023 15:04:39,Neural Network,85.91,83.82,94.72,88.92,85.28,83.35,94.2,88.42,0,0,5,Logarithm,True,5 splits,True,10,,,,,,,,,,,,,,,,,,,,,,,adam,relu,4,200,0.05,constant
