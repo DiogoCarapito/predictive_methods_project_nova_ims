@@ -478,6 +478,7 @@ if st.button("Run Model", type="primary"):
             X_df_test_copy = X_df_test_copy.loc[:, selected_features]
             #st.write(list(selected_features))
 
+
         # run the model
         #st.table(X_train.head())
         if st.session_state['model'] == "Logistic Regression":
@@ -485,9 +486,17 @@ if st.button("Run Model", type="primary"):
                 solver = st.session_state['lr_solver']
             ).fit(X_train, y_train)
         elif st.session_state['model'] == "Random Forest":
-            model = RandomForestClassifier().fit(X_train, y_train)
+            model = RandomForestClassifier(
+                criterion = st.session_state['rf_criterion'],
+                max_depth = st.session_state['rf_max_depth'],
+                max_leaf_nodes = st.session_state['rf_max_leaf_nodes'],
+            ).fit(X_train, y_train)
         elif st.session_state['model'] == "Decision Tree":
-            model = DecisionTreeClassifier().fit(X_train, y_train)
+            model = DecisionTreeClassifier(
+                max_leaf_nodes = st.session_state['max_leaf_nodes'],
+                dt_max_depth = st.session_state['dt_max_depth'],
+                criterion = st.session_state['dt_criterion'],
+            ).fit(X_train, y_train)
         elif st.session_state['model'] == "KNN":
             model = KNeighborsClassifier(
                 n_neighbors=session_state['n_neighbors']
