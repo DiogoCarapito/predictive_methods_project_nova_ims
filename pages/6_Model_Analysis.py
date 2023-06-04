@@ -24,6 +24,10 @@ import pandas as pd
 import numpy as np
 
 st.title("Model Analysis")
-st.dataframe(pd.read_csv(path + "model_analysis.csv"))
+
+df = pd.read_csv("./model_performance_records.csv")
+
+st.dataframe(df)
+
 
 
