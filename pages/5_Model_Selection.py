@@ -409,7 +409,12 @@ precision_val = []
 recall_val = []
 f1_val = []
 
-if st.button("Run Model", type="primary"):
+if 'model_run' not in st.session_state:
+    st.session_state['model_run'] = False
+
+st.button("Run Model", type="primary", on_click=lambda: st.session_state.update(model_run=True))
+
+if st.session_state['model_run']:
     st.write("----")
     st.write("Running model...")
     progress_bar = st.progress(0)
@@ -621,7 +626,6 @@ if st.button("Run Model", type="primary"):
 
     st.subheader('Validation Performance')
     col_metrics_val_1, col_metrics_val_2, col_metrics_val_3, col_metrics_val_4 = st.columns(4)
-
     with col_metrics_val_1:
         st.metric('Accuracy', str(st.session_state['accuracy_val']) + '%', str(round(st.session_state['accuracy_val']-st.session_state['accuracy'], 2))+"%")
     with col_metrics_val_2:
@@ -708,16 +712,11 @@ model_performance_record = pd.DataFrame({
 
 })
 
-    #reset_session_state()
+if model_performance_record['Accuracy'] is not None:
+    with open('model_performance_records.csv', mode='a') as file:
+        model_performance_record.to_csv(file, header=file.tell() == 0, index=False)
+st.session_state['model_run'] = False
+st.write('----')
 
-    #st.table(model_performance_record)
-
-col_button_1, col_button_2 = st.columns(2)
-with col_button_1:
-    if st.button("Save", type="primary"):
-        with open('model_performance_records.csv', mode='a') as file:
-            model_performance_record.to_csv(file, header=file.tell() == 0, index=False)
-        st.success("Saved!")
-with col_button_2:
-    st.download_button(label='Download predictions', data=sv_data, file_name='solution.csv')
+st.download_button(label='Download predictions', data=sv_data, file_name='solution.csv', disabled=bool(not st.session_state['model_run']))
 
