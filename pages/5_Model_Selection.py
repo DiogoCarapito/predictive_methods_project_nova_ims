@@ -61,7 +61,6 @@ list_session_state_variables = [
     'precision_val',
     'recall_val',
     'f1_val',
-
     'lr_solver',
     'knn_n_neighbors',
     'dt_max_depth',
@@ -119,9 +118,20 @@ list_session_state_variables = [
 
 ]
 
+list_session_state_variables_2 = [
+
+    'num_knn',
+    'transform',
+    'cross_validation_splits',
+    'outlier_treatment',
+    'rfe',
+    'num_features',
+
+]
+
 for each in list_session_state_variables:
     if each not in st.session_state:
-        st.session_state[each] = np.nan
+       st.session_state[each] = np.nan
 
 
 # Page Setup
@@ -143,7 +153,6 @@ variaveis_nao_uteis = ['Athlete Id']
 
 variaveis_numericas = list(df_train.drop(variaveis_nao_uteis, axis=1).select_dtypes(include=['int', 'float']).columns)
 variaveis_numericas.remove(target)
-
 
 variaveis_booleanas = [
     'Disability',
@@ -251,10 +260,12 @@ st.write("----")
 
 # MENU
 st.subheader("Data Preprocessing Parameters")
+
+
 st.session_state['num_knn'] = st.radio("Missing Values KNN Number of neighbors", [1, 3, 5, 7, 9, 11, 13, 15], index=2, horizontal=True)
 st.session_state['transform'] = st.radio("Transform", ("Logarithm", "Square root", "None"), index=0, horizontal=True)
-st.session_state['cross_validation'] = check_box = st.checkbox("Cross validation", value=True)
-st.session_state['cross_validation_splits'] = st.radio("Splits", ("2 splits", "5 splits", "10 splits" ), index=1, horizontal=True, disabled=bool(not st.session_state['cross_validation']))
+st.session_state['cross_validation_splits'] = st.radio("Cross Validation Splits", ("2 splits", "5 splits", "10 splits" ), index=1, horizontal=True)
+st.session_state['outlier_treatment'] = st.radio("Outlier outlier_treatment", ("negative_to_0", "mod (remover sinal negativo)"), index=0, horizontal=True)
 st.session_state['rfe'] = st.checkbox("Recursive Feature Elimination", value=False)
 st.session_state['num_features'] = st.slider("Number of features", 1, 40, 10, disabled = bool(not st.session_state['rfe']))
 
@@ -415,8 +426,6 @@ df = df.dropna()
 #st.write("Misisng values",df.isnull().sum().sum())
 
 
-
-
 ### SPLIT ###
 # X and y
 X_df = df.loc[:, df.columns != 'Outcome']
@@ -457,188 +466,196 @@ if st.session_state['model_run']:
     progress_bar = st.progress(0)
     progress = 0
 
-    if st.session_state['cross_validation'] is False:
-        pass
+    # CROSS VALIDATION
+    if st.session_state['cross_validation_splits'] == "2 splits":
+        num_splits = 2
+    elif st.session_state['cross_validation_splits'] == "5 splits":
+        num_splits = 5
     else:
-        if st.session_state['cross_validation_splits'] == "2 splits":
-            num_splits = 2
-        elif st.session_state['cross_validation_splits'] == "5 splits":
-            num_splits = 5
-        else:
-            num_splits = 10
+        num_splits = 10
 
-        # method: KFold
-        for train_index, test_index in tqdm(KFold(n_splits=num_splits).split(X)):
-            progress += 1 / num_splits
-            progress_bar.progress(progress)
+    # method: KFold
+    for train_index, test_index in tqdm(KFold(n_splits=num_splits).split(X)):
+        progress += 1 / num_splits
+        progress_bar.progress(progress)
 
-            X_train, X_test = X.iloc[train_index], X.iloc[test_index]
-            y_train, y_test = y.iloc[train_index], y.iloc[test_index]
-            X_val = X_validation.copy()
-            X_df_test_copy = df_test_copy.copy()
+        X_train, X_test = X.iloc[train_index], X.iloc[test_index]
+        y_train, y_test = y.iloc[train_index], y.iloc[test_index]
+        X_val = X_validation.copy()
+        X_df_test_copy = df_test_copy.copy()
 
-            # PREPROCESSING AFTER SPLITTING
-            # OUTLIERS
+        # PREPROCESSING AFTER SPLITTING
+        # OUTLIERS
+        if st.session_state['outlier_treatment'] == 'negative_to_0':
+
             # 1. substituir athlet score < 0 por 0
             X_train['Athlete score'] = X_train['Athlete score'].apply(lambda x: 0 if x < 0 else x).astype(float)
 
             # 2. substituir physiotherapy < 0 por 0
             X_train['Physiotherapy'] = X_train['Physiotherapy'].apply(lambda x: 0 if x < 0 else x).astype(float)
 
-            # 3. substituir athlete score > 100 por 100
-            X_train['Athlete score'] = X_train['Athlete score'].apply(lambda x: 100 if x > 100 else x).astype(float)
+        else:
+            # 1. substituir athlet score < 0 por pelo modulo abs()
+            X_train['Athlete score'] = X_train['Athlete score'].apply(abs)
 
-            # 4. substituir valores de skewness muito elevados por um tecto maximo
-            high_skewness_variables = {
-                'Sand training': 500,
-                'Recovery': 4000,
-                'Cardiovascular training': 4000,
-                'Squad training': 150,
-                'Physiotherapy': 800,
-                'Sport-specific training': 320,
-                'Other training': 130,
-            }
-            for key, value in high_skewness_variables.items():
-                X_train[key] = X_train[key].apply(lambda x: value if x > value else x).astype(float)
+            # 2. substituir physiotherapy < 0 por pelo modulo abs()
+            X_train['Physiotherapy'] = X_train['Physiotherapy'].apply(abs)
 
-            # 13. substituir valores de skewness muito elevados por um valor mais pequeno
-            skewed_data = [
-                'Previous attempts',
-                'Sand training',
-                'Plyometric training',
-                'Other training', ]
-            # iteração pelo skewed data
-            for each in skewed_data:
-                # substituição de tudo o que for superior a 1 passar a 1
-                X_train[each] = X_train[each].apply(lambda x: 1 if x > 1 else x)
+        # 3. substituir athlete score > 100 por 100
+        X_train['Athlete score'] = X_train['Athlete score'].apply(lambda x: 100 if x > 100 else x).astype(float)
 
-            # NORMALIZAÇÂO
-            # 14. mimmax scaler
-            minmax_scaler = MinMaxScaler()
-            # filtrar dataframe apenas pelas variáveis numéricas
-            variaveis_numericas = X_train.select_dtypes(include='number').columns.tolist()
+        # 4. substituir valores de skewness muito elevados por um tecto maximo
+        high_skewness_variables = {
+            'Sand training': 500,
+            'Recovery': 4000,
+            'Cardiovascular training': 4000,
+            'Squad training': 150,
+            'Physiotherapy': 800,
+            'Sport-specific training': 320,
+            'Other training': 130,
+        }
+        for key, value in high_skewness_variables.items():
+            X_train[key] = X_train[key].apply(lambda x: value if x > value else x).astype(float)
 
-            df_numericas = X_train[variaveis_numericas]
+        # 13. substituir valores de skewness muito elevados por um valor mais pequeno
+        skewed_data = [
+            'Previous attempts',
+            'Sand training',
+            'Plyometric training',
+            'Other training', ]
+        # iteração pelo skewed data
+        for each in skewed_data:
+            # substituição de tudo o que for superior a 1 passar a 1
+            X_train[each] = X_train[each].apply(lambda x: 1 if x > 1 else x)
 
-            # execução do MinMax
-            minmax_scaler = minmax_scaler.fit(df_numericas)
+        # NORMALIZAÇÂO
+        # 14. mimmax scaler
+        minmax_scaler = MinMaxScaler()
+        # filtrar dataframe apenas pelas variáveis numéricas
+        variaveis_numericas = X_train.select_dtypes(include='number').columns.tolist()
 
-            minmax_train = minmax_scaler.transform(df_numericas)
-            # Transforma resultado num dataframe
-            minmax_train = pd.DataFrame(
-                minmax_train,
-                columns = df_numericas.columns,
-                index = df_numericas.index)
-            # Substituir valores no dataframe original para novos valores MinMax
-            X_train[variaveis_numericas] = minmax_train
+        df_numericas = X_train[variaveis_numericas]
 
-            minmax_test = minmax_scaler.transform(X_test[variaveis_numericas])
-            minmax_test = pd.DataFrame(
-                minmax_test,
-                columns = X_test[variaveis_numericas].columns,
-                index = X_test[variaveis_numericas].index)
-            X_test[variaveis_numericas] = minmax_test
+        # execução do MinMax
+        minmax_scaler = minmax_scaler.fit(df_numericas)
 
-            #st.write(X_val.columns)
-            minmax_val = minmax_scaler.transform(X_val[variaveis_numericas])
-            minmax_val = pd.DataFrame(
-                minmax_val,
-                columns = X_val[variaveis_numericas].columns,
-                index = X_val[variaveis_numericas].index)
-            X_val[variaveis_numericas] = minmax_val
+        minmax_train = minmax_scaler.transform(df_numericas)
+        # Transforma resultado num dataframe
+        minmax_train = pd.DataFrame(
+            minmax_train,
+            columns = df_numericas.columns,
+            index = df_numericas.index)
+        # Substituir valores no dataframe original para novos valores MinMax
+        X_train[variaveis_numericas] = minmax_train
 
-            #st.write(X_df_test_copy.columns)
-            #st.table(X_df_test_copy.head(3))
-            X_minmax_df_test_copy = minmax_scaler.transform(X_df_test_copy[variaveis_numericas])
-            #st.write(X_minmax_df_test_copy)
-            X_minmax_df_test_copy = pd.DataFrame(
-                X_minmax_df_test_copy,
-                columns=X_df_test_copy[variaveis_numericas].columns,
-                index=X_df_test_copy[variaveis_numericas].index)
-            X_df_test_copy[variaveis_numericas] = X_minmax_df_test_copy
+        minmax_test = minmax_scaler.transform(X_test[variaveis_numericas])
+        minmax_test = pd.DataFrame(
+            minmax_test,
+            columns = X_test[variaveis_numericas].columns,
+            index = X_test[variaveis_numericas].index)
+        X_test[variaveis_numericas] = minmax_test
 
+        #st.write(X_val.columns)
+        minmax_val = minmax_scaler.transform(X_val[variaveis_numericas])
+        minmax_val = pd.DataFrame(
+            minmax_val,
+            columns = X_val[variaveis_numericas].columns,
+            index = X_val[variaveis_numericas].index)
+        X_val[variaveis_numericas] = minmax_val
 
-            # RFE
-            # 15. Recursive Feature Elimination
-            if st.session_state['rfe'] is True:
-                rfe_model = LogisticRegression()
-                rfe = RFE(estimator=rfe_model, n_features_to_select=st.session_state['num_features'])
-                X_rfe = rfe.fit_transform(X=X_train, y=y_train)
-                selected_features = pd.Series(rfe.support_, index=X_train.columns)
-                X_test = X_test.loc[:, selected_features]
-                X_train = X_train.loc[:, selected_features]
-                X_val = X_val.loc[:, selected_features]
-                X_df_test_copy = X_df_test_copy.loc[:, selected_features]
-                #st.write(list(selected_features))
+        #st.write(X_df_test_copy.columns)
+        #st.table(X_df_test_copy.head(3))
+        X_minmax_df_test_copy = minmax_scaler.transform(X_df_test_copy[variaveis_numericas])
+        #st.write(X_minmax_df_test_copy)
+        X_minmax_df_test_copy = pd.DataFrame(
+            X_minmax_df_test_copy,
+            columns=X_df_test_copy[variaveis_numericas].columns,
+            index=X_df_test_copy[variaveis_numericas].index)
+        X_df_test_copy[variaveis_numericas] = X_minmax_df_test_copy
 
 
-            # run the model
-            #st.table(X_train.head())
-            if st.session_state['model'] == "Logistic Regression":
-                model = LogisticRegression(
-                    solver = st.session_state['lr_solver']
-                ).fit(X_train, y_train)
-            elif st.session_state['model'] == "Random Forest":
-                model = RandomForestClassifier(
-                    criterion = st.session_state['rf_criterion'],
-                    max_depth = st.session_state['rf_max_depth'],
-                    max_leaf_nodes = st.session_state['rf_max_leaf_nodes'],
-                ).fit(X_train, y_train)
-            elif st.session_state['model'] == "Decision Tree":
-                model = DecisionTreeClassifier(
-                    max_leaf_nodes = st.session_state['dt_max_leaf_nodes'],
-                    max_depth = st.session_state['dt_max_depth'],
-                    criterion = st.session_state['dt_criterion'],
-                ).fit(X_train, y_train)
-            elif st.session_state['model'] == "KNN":
-                model = KNeighborsClassifier(
-                    n_neighbors=st.session_state['knn_n_neighbors']
-                ).fit(X_train, y_train)
-            elif st.session_state['model'] == "Ensambles":
-                model = VotingClassifier(
-                    estimators=[
-                        ('lr', LogisticRegression()),
-                        ('rf', RandomForestClassifier()),
-                        ('dt', DecisionTreeClassifier()),
-                        ('knn', KNeighborsClassifier()),
-                        ('svm', LinearSVC()),
-                        ('nb', GaussianNB()),
-                        ('xgb', XGBClassifier()),
-                        ('mlp', MLPClassifier())
-                    ],
-                    voting='hard'
-                ).fit(X_train, y_train)
-            elif st.session_state['model'] == "SVM":
-                model = LinearSVC().fit(X_train, y_train)
-            elif st.session_state['model'] == "Naive Bayes":
-                model = GaussianNB().fit(X_train, y_train)
-            elif st.session_state['model'] == "XGBoost":
-                model = XGBClassifier().fit(X_train, y_train)
-            elif st.session_state['model'] == "Neural Network":
-                model = MLPClassifier(
-                    hidden_layer_sizes = st.session_state['nn_hidden_layer_sizes'],
-                    activation = st.session_state['nn_activation'],
-                    solver = st.session_state['nn_solver'],
-                    max_iter=st.session_state['nn_max_iter'],
-                    learning_rate=st.session_state['nn_learning_rate'],
-                    learning_rate_init=st.session_state['nn_learning_rate_init'],
-                ).fit(X_train, y_train)
+        # RFE
+        # 15. Recursive Feature Elimination
+        if st.session_state['rfe'] is True:
+            rfe_model = LogisticRegression()
+            rfe = RFE(estimator=rfe_model, n_features_to_select=st.session_state['num_features'])
+            X_rfe = rfe.fit_transform(X=X_train, y=y_train)
+            selected_features = pd.Series(rfe.support_, index=X_train.columns)
+            X_test = X_test.loc[:, selected_features]
+            X_train = X_train.loc[:, selected_features]
+            X_val = X_val.loc[:, selected_features]
+            X_df_test_copy = X_df_test_copy.loc[:, selected_features]
+            #st.write(list(selected_features))
 
-            predictions = model.predict(X_test)
+        # run the model
+        #st.table(X_train.head())
+        if st.session_state['model'] == "Logistic Regression":
+            model = LogisticRegression(
+                solver = st.session_state['lr_solver']
+            ).fit(X_train, y_train)
+        elif st.session_state['model'] == "Random Forest":
+            model = RandomForestClassifier(
+                criterion = st.session_state['rf_criterion'],
+                max_depth = st.session_state['rf_max_depth'],
+                max_leaf_nodes = st.session_state['rf_max_leaf_nodes'],
+            ).fit(X_train, y_train)
+        elif st.session_state['model'] == "Decision Tree":
+            model = DecisionTreeClassifier(
+                max_leaf_nodes = st.session_state['dt_max_leaf_nodes'],
+                max_depth = st.session_state['dt_max_depth'],
+                criterion = st.session_state['dt_criterion'],
+            ).fit(X_train, y_train)
+        elif st.session_state['model'] == "KNN":
+            model = KNeighborsClassifier(
+                n_neighbors=st.session_state['knn_n_neighbors']
+            ).fit(X_train, y_train)
+        elif st.session_state['model'] == "Ensambles":
+            model = VotingClassifier(
+                estimators=[
+                    ('lr', LogisticRegression()),
+                    ('rf', RandomForestClassifier()),
+                    ('dt', DecisionTreeClassifier()),
+                    ('knn', KNeighborsClassifier()),
+                    ('svm', LinearSVC()),
+                    ('nb', GaussianNB()),
+                    ('xgb', XGBClassifier()),
+                    ('mlp', MLPClassifier())
+                ],
+                voting='hard'
+            ).fit(X_train, y_train)
+        elif st.session_state['model'] == "SVM":
+            model = LinearSVC().fit(X_train, y_train)
+        elif st.session_state['model'] == "Naive Bayes":
+            model = GaussianNB().fit(X_train, y_train)
+        elif st.session_state['model'] == "XGBoost":
+            model = XGBClassifier().fit(X_train, y_train)
+        elif st.session_state['model'] == "Neural Network":
+            model = MLPClassifier(
+                hidden_layer_sizes = st.session_state['nn_hidden_layer_sizes'],
+                activation = st.session_state['nn_activation'],
+                solver = st.session_state['nn_solver'],
+                max_iter=st.session_state['nn_max_iter'],
+                learning_rate=st.session_state['nn_learning_rate'],
+                learning_rate_init=st.session_state['nn_learning_rate_init'],
+            ).fit(X_train, y_train)
+
+        predictions = model.predict(X_test)
 
 
-            accuracy.append(accuracy_score(y_test, predictions))
-            precision.append(precision_score(y_test, predictions))
-            recall.append(recall_score(y_test, predictions))
-            f1.append(f1_score(y_test, predictions))
+        accuracy.append(accuracy_score(y_test, predictions))
+        precision.append(precision_score(y_test, predictions))
+        recall.append(recall_score(y_test, predictions))
+        f1.append(f1_score(y_test, predictions))
 
-            predictions_val = model.predict(X_val)
-            accuracy_val.append(accuracy_score(y_validation, predictions_val))
-            precision_val.append(precision_score(y_validation, predictions_val))
-            recall_val.append(recall_score(y_validation, predictions_val))
-            f1_val.append(f1_score(y_validation, predictions_val))
+        predictions_val = model.predict(X_val)
+        accuracy_val.append(accuracy_score(y_validation, predictions_val))
+        precision_val.append(precision_score(y_validation, predictions_val))
+        recall_val.append(recall_score(y_validation, predictions_val))
+        f1_val.append(f1_score(y_validation, predictions_val))
 
     progress_bar.progress(100)
+
+
     st.session_state['final_predictions'] = model.predict(X_df_test_copy)
     st.session_state['final_predictions'] = pd.DataFrame(st.session_state['final_predictions'], index=X_df_test_copy.index, columns=['Outcome'])
 
@@ -647,23 +664,39 @@ if st.session_state['model_run']:
     st.session_state['recall'] = round(100*np.mean(recall),2)
     st.session_state['f1'] = round(100*np.mean(f1),2)
 
+
+
     st.session_state['accuracy_val'] = round(100*np.mean(accuracy_val),2)
     st.session_state['precision_val'] = round(100*np.mean(precision_val),2)
     st.session_state['recall_val'] = round(100*np.mean(recall_val),2)
     st.session_state['f1_val'] = round(100*np.mean(f1_val),2)
 
+
     df_best = pd.read_csv('model_performance_records.csv')
     df_best = df_best[df_best['F1']==df_best['F1'].max()]
 
 
-
     st.subheader('Test Performance')
-    col_metrics_1, col_metrics_2, col_metrics_3, col_metrics_4 = st.columns(4)
-    with col_metrics_1: st.metric('Accuracy', str(st.session_state['accuracy'])+'%', st.session_state['accuracy']-df_best['Accuracy'].values[0])
-    with col_metrics_2: st.metric('Precision', str(st.session_state['precision'])+'%', st.session_state['precision']-df_best['Precision'].values[0])
-    with col_metrics_3: st.metric('Recall', str(st.session_state['recall'])+'%', st.session_state['recall']-df_best['Recall'].values[0])
-    with col_metrics_4: st.metric('F1', str(st.session_state['f1'])+'%', st.session_state['f1']-df_best['F1'].values[0])
-
+    try:
+        col_metrics_1, col_metrics_2, col_metrics_3, col_metrics_4 = st.columns(4)
+        with col_metrics_1:
+            st.metric('Accuracy', str(st.session_state['accuracy'])+'%', st.session_state['accuracy']-df_best['Accuracy'].values[0])
+        with col_metrics_2:
+            st.metric('Precision', str(st.session_state['precision'])+'%', st.session_state['precision']-df_best['Precision'].values[0])
+        with col_metrics_3:
+            st.metric('Recall', str(st.session_state['recall'])+'%', st.session_state['recall']-df_best['Recall'].values[0])
+        with col_metrics_4:
+            st.metric('F1', str(st.session_state['f1'])+'%', st.session_state['f1']-df_best['F1'].values[0])
+    except:
+        col_metrics_1, col_metrics_2, col_metrics_3, col_metrics_4 = st.columns(4)
+        with col_metrics_1:
+            st.metric('Accuracy', str(st.session_state['accuracy']) + '%')
+        with col_metrics_2:
+            st.metric('Precision', str(st.session_state['precision']) + '%')
+        with col_metrics_3:
+            st.metric('Recall', str(st.session_state['recall']) + '%')
+        with col_metrics_4:
+            st.metric('F1', str(st.session_state['f1']) + '%')
     st.subheader('Validation Performance')
     col_metrics_val_1, col_metrics_val_2, col_metrics_val_3, col_metrics_val_4 = st.columns(4)
     with col_metrics_val_1:
@@ -685,29 +718,29 @@ if st.session_state['model_run']:
         st.metric("Number of Outcome = 0", str(len(st.session_state['final_predictions'][st.session_state['final_predictions']['Outcome']==0])))
 
 
-sv_data = st.session_state['final_predictions'].to_csv(index=True)
-buffer = io.BytesIO()
-buffer.write(sv_data.encode())
-buffer.seek(0)
+    sv_data = st.session_state['final_predictions'].to_csv(index=True)
+    buffer = io.BytesIO()
+    buffer.write(sv_data.encode())
+    buffer.seek(0)
 
 model_performance_record = pd.DataFrame({
     'Date': [dt.datetime.now().strftime("%d/%m/%Y %H:%M:%S")],
     'Model': [st.session_state['model']],
-    'Accuracy': [st.session_state['accuracy']],
-    'Precision': [st.session_state['precision']],
-    'Recall': [st.session_state['recall']],
-    'F1': [st.session_state['f1']],
-    'Accuracy_val': [st.session_state['accuracy_val']],
-    'Precision_val': [st.session_state['precision_val']],
-    'Recall_val': [st.session_state['recall_val']],
-    'F1_val': [st.session_state['f1_val']],
-    'Number of Outcome = 1': [len(st.session_state['final_predictions'][st.session_state['final_predictions']['Outcome']==1])],
-    'Number of Outcome = 0': [len(st.session_state['final_predictions'][st.session_state['final_predictions']['Outcome']==0])],
+    'Accuracy': st.session_state['accuracy'],
+    'Precision': st.session_state['precision'],
+    'Recall': st.session_state['recall'],
+    'F1': st.session_state['f1'],
+    'Accuracy_val': st.session_state['accuracy_val'],
+    'Precision_val': st.session_state['precision_val'],
+    'Recall_val': st.session_state['recall_val'],
+    'F1_val': st.session_state['f1_val'],
+    'Number of Outcome = 1': len(st.session_state['final_predictions'][st.session_state['final_predictions']['Outcome']==1]),
+    'Number of Outcome = 0': len(st.session_state['final_predictions'][st.session_state['final_predictions']['Outcome']==0]),
 
     'num_knn': st.session_state['num_knn'],
     'transform': st.session_state['transform'],
-    'cross_validation': st.session_state['cross_validation'],
     'cross_validation_splits': st.session_state['cross_validation_splits'],
+    'outlier_treatment': st.session_state['outlier_treatment'],
     'rfe': st.session_state['rfe'],
     'num_features': st.session_state['num_features'],
 
@@ -715,7 +748,6 @@ model_performance_record = pd.DataFrame({
 
     'knn_n_neighbors': st.session_state['knn_n_neighbors'],
 
-    'dt_max_depth': st.session_state['dt_max_depth'],
     'dt_max_depth': st.session_state['dt_max_depth'],
     'dt_max_leaf_nodes': st.session_state['dt_max_leaf_nodes'],
 
@@ -765,5 +797,8 @@ if model_performance_record['Accuracy'] is not np.nan:
 st.session_state['model_run'] = False
 st.write('----')
 
-st.download_button(label='Download predictions', data=sv_data, file_name='solution.csv', disabled=st.session_state['model_run'])
+try:
+    st.download_button(label='Download predictions', data=sv_data, file_name='solution.csv', disabled=st.session_state['model_run'])
+except:
+    pass
 
