@@ -54,13 +54,15 @@ other_models.remove(df_best['Model'].iloc[0])
 #st.write(other_models)
 
 for each in other_models:
-    st.write("----")
+
     st.subheader(each)
     df_other_model = df[(df['Model'] == each)]
     df_other_model_best_score = df_other_model[(df_other_model['F1'] == df_other_model['F1'].max())]
     df_other_model_best_score = df_other_model_best_score.iloc[0]
+
     col_best_1, col_best_2 = st.columns(2)
     with col_best_1: st.metric('F1', df_other_model_best_score['F1'])
     with col_best_2: st.metric('F1_val', df_other_model_best_score['F1_val'])
 
     st.dataframe(df_other_model_best_score)
+    st.write("----")

@@ -1,0 +1,63 @@
+Date,Model,Accuracy,Precision,Recall,F1,Accuracy_val,Precision_val,Recall_val,F1_val,Number of Outcome = 1,Number of Outcome = 0,num_knn,transform,cross_validation,cross_validation_splits,rfe,num_features,lr_solver,knn_n_neighbors,dt_max_depth,dt_max_leaf_nodes,rf_criterion,rf_max_depth,rf_max_leaf_nodes,ensemble,bagging,bagging_dt_criterion,bagging_dt_max_depth,bagging_max_leaf_nodes,bagging_rf_criterion,bagging_rf_max_depth,bagging_rf_max_leaf_nodes,boosting,boosting_dt_criterion,boosting_dt_max_depth,boosting_max_leaf_nodes,boosting_rf_criterion,boosting_rf_max_depth,boosting_rf_max_leaf_nodes,nn_solver,nn_activation,nn_hidden_layer_sizes,nn_max_iter,nn_learning_rate_init,nn_learning_rate
+04/06/2023 15:00:36,Logistic Regression,85.19,86.34,89.32,87.8,84.51,86.07,88.35,87.19,0,0,5,Logarithm,True,5 splits,False,10,lbfgs,,,,,,,,,,,,,,,,,,,,,,,,,,,
+04/06/2023 15:02:27,Neural Network,81.53,85.3,84.19,83.88,81.76,84.97,84.9,84.26,0,0,5,Logarithm,True,10 splits,True,20,,,,,,,,,,,,,,,,,,,,,,,adam,relu,10,143,0.03,constant
+04/06/2023 15:04:39,Neural Network,85.91,83.82,94.72,88.92,85.28,83.35,94.2,88.42,0,0,5,Logarithm,True,5 splits,True,10,,,,,,,,,,,,,,,,,,,,,,,adam,relu,4,200,0.05,constant
+04/06/2023 17:00:08,Neural Network,85.26,85.92,90.08,87.93,84.26,85.29,89.01,87.09,4849,2889,5,Logarithm,True,5 splits,True,15,,,,,,,,,,,,,,,,,,,,,,,adam,relu,4,200,0.08,invscaling
+04/06/2023 17:04:09,Logistic Regression,85.19,86.34,89.32,87.8,84.51,86.07,88.35,87.19,4858,2880,5,Logarithm,True,5 splits,False,10,lbfgs,,,,,,,,,,,,,,,,,,,,,,,,,,,
+04/06/2023 17:06:48,Logistic Regression,85.19,86.34,89.32,87.8,84.51,86.07,88.35,87.19,4858,2880,5,Logarithm,True,5 splits,False,10,lbfgs,,,,,,,,,,,,,,,,,,,,,,,,,,,
+04/06/2023 17:08:04,KNN,86.23,85.29,92.97,88.96,85.36,84.91,91.79,88.21,5124,2614,5,Square root,True,5 splits,True,20,,5,,,,,,,,,,,,,,,,,,,,,,,,,,
+04/06/2023 17:09:07,KNN,85.32,84.33,92.61,88.27,84.96,84.17,92.13,87.97,5101,2637,5,Square root,True,10 splits,True,10,,5,,,,,,,,,,,,,,,,,,,,,,,,,,
+04/06/2023 17:09:39,Logistic Regression,85.19,86.34,89.32,87.8,84.51,86.07,88.35,87.19,4858,2880,5,Logarithm,True,5 splits,False,10,lbfgs,,,,,,,,,,,,,,,,,,,,,,,,,,,
+04/06/2023 17:09:57,Logistic Regression,85.07,86.09,89.44,87.72,84.61,85.99,88.66,87.3,4863,2875,5,Logarithm,True,5 splits,False,10,liblinear,,,,,,,,,,,,,,,,,,,,,,,,,,,
+04/06/2023 17:10:03,Logistic Regression,85.17,86.32,89.31,87.78,84.51,86.08,88.34,87.19,4858,2880,5,Logarithm,True,5 splits,False,10,newton-cg,,,,,,,,,,,,,,,,,,,,,,,,,,,
+04/06/2023 17:10:24,Logistic Regression,85.16,86.32,89.3,87.78,84.51,86.07,88.34,87.19,4858,2880,5,Logarithm,True,5 splits,False,10,sag,,,,,,,,,,,,,,,,,,,,,,,,,,,
+04/06/2023 17:10:31,Logistic Regression,85.16,86.32,89.29,87.77,84.51,86.08,88.34,87.19,4858,2880,5,Logarithm,True,5 splits,False,10,saga,,,,,,,,,,,,,,,,,,,,,,,,,,,
+04/06/2023 17:10:42,KNN,79.62,77.39,93.04,84.49,79.49,77.48,92.52,84.34,5635,2103,5,Logarithm,True,5 splits,False,10,,11,,,,,,,,,,,,,,,,,,,,,,,,,,
+04/06/2023 17:10:51,KNN,78.28,76.39,92.04,83.49,78.51,76.76,91.77,83.59,5620,2118,5,Square root,True,5 splits,False,10,,11,,,,,,,,,,,,,,,,,,,,,,,,,,
+04/06/2023 17:11:02,Naive Bayes,78.36,73.62,99.36,84.57,78.33,73.52,99.56,84.58,6089,1649,5,Square root,True,5 splits,False,10,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+04/06/2023 17:11:07,Naive Bayes,78.36,73.62,99.36,84.57,78.33,73.52,99.56,84.58,6089,1649,7,Square root,True,5 splits,False,10,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+04/06/2023 17:11:23,Naive Bayes,77.87,72.95,100.0,84.36,77.58,72.69,100.0,84.19,6379,1359,7,Square root,True,5 splits,True,10,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+04/06/2023 17:11:47,Naive Bayes,77.87,72.95,100.0,84.36,77.58,72.69,100.0,84.19,6379,1359,7,Square root,True,5 splits,True,16,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+04/06/2023 17:12:26,Decision Tree,83.9,80.67,96.04,87.68,83.34,80.11,95.9,87.29,5536,2202,7,Square root,True,5 splits,True,16,,,5,5,,,,,,,,,,,,,,,,,,,,,,,,
+04/06/2023 17:12:33,Decision Tree,83.9,80.67,96.04,87.68,83.34,80.11,95.9,87.29,0,0,7,Square root,True,5 splits,True,16,,,5,5,,,,,,,,,,,,,,,,,,,,,,,,
+04/06/2023 17:13:09,Decision Tree,83.88,80.76,95.83,87.65,83.32,80.19,95.69,87.26,5536,2202,7,Square root,True,5 splits,True,16,,,5,5,,,,,,,,,,,,,,,,,,,,,,,,
+04/06/2023 17:13:21,Decision Tree,83.88,80.76,95.83,87.65,83.32,80.19,95.69,87.26,0,0,7,Logarithm,True,5 splits,True,16,,,5,5,,,,,,,,,,,,,,,,,,,,,,,,
+04/06/2023 17:39:08,Logistic Regression,,,,,,,,,0,0,5,Logarithm,True,5 splits,False,10,lbfgs,,,,,,,,,,,,,,,,,,,,,,,,,,,
+04/06/2023 17:48:36,Logistic Regression,,,,,,,,,0,0,5,Logarithm,True,5 splits,False,10,lbfgs,,,,,,,,,,,,,,,,,,,,,,,,,,,
+04/06/2023 17:48:46,Neural Network,,,,,,,,,0,0,5,Logarithm,True,5 splits,False,10,,,,,,,,,,,,,,,,,,,,,,,adam,relu,8,200,0.07,constant
+04/06/2023 17:48:49,Neural Network,,,,,,,,,0,0,5,Square root,True,5 splits,False,10,,,,,,,,,,,,,,,,,,,,,,,adam,relu,8,200,0.07,constant
+04/06/2023 17:49:36,Neural Network,87.21,85.13,95.21,89.88,86.75,84.77,94.84,89.52,5290,2448,5,Square root,True,10 splits,True,15,,,,,,,,,,,,,,,,,,,,,,,adam,relu,8,200,0.07,constant
+04/06/2023 20:36:28,Logistic Regression,,,,,,,,,0,0,5,Logarithm,True,5 splits,False,10,lbfgs,,,,,,,,,,,,,,,,,,,,,,,,,,,
+04/06/2023 20:37:25,Logistic Regression,,,,,,,,,0,0,5,Logarithm,True,5 splits,False,10,lbfgs,,,,,,,,,,,,,,,,,,,,,,,,,,,
+04/06/2023 20:37:30,Logistic Regression,,,,,,,,,0,0,5,Logarithm,True,5 splits,False,10,lbfgs,,,,,,,,,,,,,,,,,,,,,,,,,,,
+04/06/2023 20:37:33,Naive Bayes,,,,,,,,,0,0,5,Logarithm,True,5 splits,False,10,lbfgs,5,,,,,,,,,,,,,,,,,,,,,,,,,,
+04/06/2023 20:37:39,Decision Tree,,,,,,,,,0,0,5,Logarithm,True,5 splits,False,10,lbfgs,5,5,5,,,,,,,,,,,,,,,,,,,,,,,,
+04/06/2023 20:37:46,Random Forest,,,,,,,,,0,0,5,Logarithm,True,5 splits,False,10,lbfgs,5,5,5,gini,5,5,,,,,,,,,,,,,,,,,,,,,
+04/06/2023 20:37:49,Neural Network,,,,,,,,,0,0,5,Logarithm,True,5 splits,False,10,lbfgs,5,5,5,gini,5,5,,,,,,,,,,,,,,,,lbfgs,logistic,,200,0.0003,constant
+04/06/2023 20:38:02,Neural Network,,,,,,,,,0,0,5,Logarithm,True,5 splits,False,10,lbfgs,5,5,5,gini,5,5,,,,,,,,,,,,,,,,lbfgs,logistic,,200,0.0003,constant
+04/06/2023 20:38:07,Neural Network,,,,,,,,,0,0,5,Logarithm,True,5 splits,False,10,lbfgs,5,5,5,gini,5,5,,,,,,,,,,,,,,,,lbfgs,logistic,,200,0.03,constant
+04/06/2023 20:39:57,Logistic Regression,,,,,,,,,0,0,5,Logarithm,True,5 splits,False,10,lbfgs,,,,,,,,,,,,,,,,,,,,,,,,,,,
+04/06/2023 20:41:32,Logistic Regression,,,,,,,,,0,0,5,Logarithm,True,5 splits,False,10,lbfgs,,,,,,,,,,,,,,,,,,,,,,,,,,,
+04/06/2023 20:41:36,Neural Network,,,,,,,,,0,0,5,Logarithm,True,5 splits,False,10,lbfgs,,,,,,,,,,,,,,,,,,,,,,lbfgs,logistic,10,200,0.0003,constant
+04/06/2023 20:41:45,Neural Network,,,,,,,,,0,0,7,Square root,True,5 splits,False,10,lbfgs,,,,,,,,,,,,,,,,,,,,,,adam,relu,10,200,0.03,constant
+04/06/2023 20:41:48,Neural Network,,,,,,,,,0,0,7,Square root,True,5 splits,False,10,lbfgs,,,,,,,,,,,,,,,,,,,,,,adam,relu,27,200,0.03,constant
+04/06/2023 20:41:53,Neural Network,,,,,,,,,0,0,7,Square root,True,5 splits,True,15,lbfgs,,,,,,,,,,,,,,,,,,,,,,adam,relu,27,200,0.03,constant
+04/06/2023 20:46:33,Neural Network,,,,,,,,,0,0,5,Logarithm,True,5 splits,False,10,lbfgs,,,,,,,,,,,,,,,,,,,,,,adam,relu,200,0.0003,constant,24,24,20,0,0,0,0,0,0,0
+04/06/2023 20:46:37,Neural Network,,,,,,,,,0,0,5,Logarithm,True,5 splits,False,10,lbfgs,,,,,,,,,,,,,,,,,,,,,,adam,relu,200,0.003,constant,24,24,20,0,0,0,0,0,0,0
+04/06/2023 20:46:42,Neural Network,,,,,,,,,0,0,5,Logarithm,True,5 splits,True,15,lbfgs,,,,,,,,,,,,,,,,,,,,,,adam,relu,200,0.003,constant,24,24,20,0,0,0,0,0,0,0
+04/06/2023 20:47:16,Neural Network,83.81,82.17,93.33,87.3,83.39,81.77,93.17,87.0,5414,2324,5,Logarithm,True,5 splits,True,15,lbfgs,,,,,,,,,,,,,,,,,,,,,,adam,relu,200,0.003,constant,24,24,20,0,0,0,0,0,0,0
+04/06/2023 20:48:03,Neural Network,87.83,85.99,95.12,90.32,87.29,85.4,94.93,89.91,5184,2554,5,Square root,True,5 splits,True,15,lbfgs,,,,,,,,,,,,,,,,,,,,,,adam,relu,200,0.003,constant,24,24,20,0,0,0,0,0,0,0
+04/06/2023 20:49:07,Neural Network,74.25,81.98,73.02,76.91,73.99,80.93,73.91,77.0,4470,3268,5,None,True,5 splits,False,15,lbfgs,,,,,,,,,,,,,,,,,,,,,,adam,relu,200,0.003,constant,24,24,20,0,0,0,0,0,0,0
+04/06/2023 20:49:11,Neural Network,74.25,81.98,73.02,76.91,73.99,80.93,73.91,77.0,4470,3268,5,Square root,True,5 splits,False,15,lbfgs,,,,,,,,,,,,,,,,,,,,,,adam,relu,200,0.003,constant,24,24,20,0,0,0,0,0,0,0
+04/06/2023 20:49:59,Neural Network,77.29,84.35,76.09,79.9,76.44,83.95,74.77,79.01,3788,3950,5,Square root,True,5 splits,False,15,lbfgs,,,,,,,,,,,,,,,,,,,,,,adam,relu,200,0.003,adaptive,24,24,20,0,0,0,0,0,0,0
+04/06/2023 20:50:44,Neural Network,76.13,84.64,73.26,78.47,74.66,83.73,71.38,76.96,4212,3526,5,Square root,True,5 splits,False,15,lbfgs,,,,,,,,,,,,,,,,,,,,,,adam,relu,200,0.003,invscaling,24,24,20,0,0,0,0,0,0,0
+04/06/2023 20:50:50,Neural Network,76.13,84.64,73.26,78.47,74.66,83.73,71.38,76.96,4212,3526,5,Square root,True,5 splits,False,15,lbfgs,,,,,,,,,,,,,,,,,,,,,,adam,relu,200,0.003,constant,24,24,20,0,0,0,0,0,0,0
+04/06/2023 20:51:23,Neural Network,80.4,84.79,81.87,83.23,79.29,83.87,80.81,82.25,4349,3389,5,Square root,True,5 splits,False,15,lbfgs,,,,,,,,,,,,,,,,,,,,,,adam,relu,200,0.01,constant,24,24,20,0,0,0,0,0,0,0
+04/06/2023 20:51:31,Neural Network,80.4,84.79,81.87,83.23,79.29,83.87,80.81,82.25,4349,3389,5,Square root,True,5 splits,False,15,lbfgs,,,,,,,,,,,,,,,,,,,,,,adam,relu,200,0.003,constant,24,24,20,0,0,0,0,0,0,0
+04/06/2023 20:51:35,Neural Network,80.4,84.79,81.87,83.23,79.29,83.87,80.81,82.25,4349,3389,5,Square root,True,5 splits,False,15,lbfgs,,,,,,,,,,,,,,,,,,,,,,adam,relu,200,0.003,constant,24,24,20,10,0,0,0,0,0,0
+04/06/2023 20:52:17,Neural Network,77.02,84.19,75.77,79.67,76.07,83.13,75.08,78.82,4197,3541,5,Square root,True,5 splits,False,15,lbfgs,,,,,,,,,,,,,,,,,,,,,,adam,relu,200,0.003,constant,24,24,20,10,0,0,0,0,0,0
+04/06/2023 20:52:23,Neural Network,77.02,84.19,75.77,79.67,76.07,83.13,75.08,78.82,4197,3541,5,Square root,True,5 splits,False,15,lbfgs,,,,,,,,,,,,,,,,,,,,,,adam,relu,200,0.003,constant,24,24,20,0,0,0,0,0,0,0
+04/06/2023 20:53:03,Neural Network,76.7,83.67,75.83,79.39,76.32,83.77,74.82,78.89,4019,3719,5,Square root,True,5 splits,False,15,lbfgs,,,,,,,,,,,,,,,,,,,,,,adam,relu,200,0.003,constant,24,24,20,0,0,0,0,0,0,0
+04/06/2023 20:53:37,Logistic Regression,76.7,83.67,75.83,79.39,76.32,83.77,74.82,78.89,4019,3719,5,Logarithm,True,5 splits,False,10,lbfgs,,,,,,,,,,,,,,,,,,,,,,adam,relu,200,0.003,constant,24,24,20,0,0,0,0,0,0,0
+04/06/2023 20:55:17,Logistic Regression,,,,,,,,,0,0,5,Logarithm,True,5 splits,False,10,lbfgs,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+04/06/2023 20:55:25,Neural Network,,,,,,,,,0,0,5,Logarithm,True,5 splits,False,10,lbfgs,,,,,,,,,,,,,,,,,,,,,,lbfgs,logistic,200,0.0003,constant,10,0,0,0,0,0,0,0,0,0

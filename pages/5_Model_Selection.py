@@ -23,22 +23,18 @@ else:
 # Regular Imports
 import pandas as pd
 import numpy as np
-import csv
 import datetime as dt
 from tqdm import tqdm
-import time
 import io
 
 # sklearn imports
 from sklearn.model_selection import train_test_split, KFold
-from sklearn.linear_model import LogisticRegression, LinearRegression
+from sklearn.linear_model import LogisticRegression
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.impute import KNNImputer
-from sklearn.metrics import confusion_matrix, accuracy_score, precision_score, recall_score, r2_score, \
-    mean_absolute_error, mean_squared_error
+from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
 from sklearn.model_selection import train_test_split
 from sklearn.tree import DecisionTreeClassifier
-from sklearn.metrics import f1_score
 from sklearn.feature_selection import RFE
 from sklearn.naive_bayes import GaussianNB
 from sklearn.ensemble import RandomForestClassifier
@@ -54,53 +50,79 @@ st.set_page_config(
     page_icon=":sports_medal:",
     layout="wide")
 
-if 'accuracy' not in st.session_state: st.session_state['accuracy'] = np.nan
-if 'precision' not in st.session_state: st.session_state['precision'] = np.nan
-if 'recall' not in st.session_state: st.session_state['recall'] = np.nan
-if 'f1' not in st.session_state: st.session_state['f1'] = np.nan
-if 'accuracy_val' not in st.session_state: st.session_state['accuracy_val'] = np.nan
-if 'precision_val' not in st.session_state: st.session_state['precision_val'] = np.nan
-if 'recall_val' not in st.session_state: st.session_state['recall_val'] = np.nan
-if 'f1_val' not in st.session_state: st.session_state['f1_val'] = np.nan
-
-def reset_session_state():
+if 'final_predictions' not in st.session_state:
     st.session_state['final_predictions'] = pd.DataFrame(columns=['Outcome'])
+list_session_state_variables = [
+    'accuracy',
+    'precision',
+    'recall',
+    'f1',
+    'accuracy_val',
+    'precision_val',
+    'recall_val',
+    'f1_val',
 
-    st.session_state['lr_solver'] = np.nan
+    'lr_solver',
+    'knn_n_neighbors',
+    'dt_max_depth',
+    'dt_max_leaf_nodes',
+    'rf_criterion'
+    'rf_max_depth',
+    'rf_max_leaf_nodes',
+    'ensemble',
+    'bagging',
+    'bagging_dt_criterion',
+    'bagging_dt_max_depth',
+    'bagging_dt_max_leaf_nodes',
+    'bagging_max_leaf_nodes',
+    'bagging_rf_criterion',
+    'bagging_rf_max_depth',
+    'bagging_rf_max_leaf_nodes',
+    'boosting',
+    'boosting_dt_criterion',
+    'boosting_dt_max_depth',
+    'boosting_dt_max_leaf_nodes',
+    'boosting_max_leaf_nodes',
+    'boosting_rf_criterion',
+    'boosting_rf_max_depth',
+    'boosting_rf_max_leaf_nodes',
+    'rf_n_estimators',
+    'rf_max_features',
+    'rf_min_samples_split',
+    'rf_min_samples_leaf',
+    'rf_bootstrap',
+    'rf_criterion',
+    'rf_max_depth',
+    'knn_n_neighbors',
+    'knn_weights',
+    'knn_algorithm',
+    'knn_leaf_size',
+    'knn_p',
+    'knn_metric',
+    'knn_metric_params',
+    'nn_solver',
+    'nn_activation',
+    'nn_hidden_layer_sizes',
+    'nn_max_iter',
+    'nn_learning_rate_init',
+    'nn_learning_rate',
+    'nn_hidden_layer_1',
+    'nn_hidden_layer_2',
+    'nn_hidden_layer_3',
+    'nn_hidden_layer_4',
+    'nn_hidden_layer_5',
+    'nn_hidden_layer_6',
+    'nn_hidden_layer_7',
+    'nn_hidden_layer_8',
+    'nn_hidden_layer_9',
+    'nn_hidden_layer_10',
 
-    st.session_state['knn_n_neighbors'] = np.nan
+]
 
-    st.session_state['dt_max_depth'] = np.nan
-    st.session_state['dt_max_leaf_nodes'] = np.nan
+for each in list_session_state_variables:
+    if each not in st.session_state:
+        st.session_state[each] = np.nan
 
-    st.session_state['rf_criterion'] = np.nan
-    st.session_state['rf_max_depth'] = np.nan
-    st.session_state['rf_max_leaf_nodes'] = np.nan
-
-    st.session_state['ensemble'] = np.nan
-    st.session_state['bagging'] = np.nan
-    st.session_state['bagging_dt_criterion'] = np.nan
-    st.session_state['bagging_dt_max_depth'] = np.nan
-    st.session_state['bagging_max_leaf_nodes'] = np.nan
-    st.session_state['bagging_rf_criterion'] = np.nan
-    st.session_state['bagging_rf_max_depth'] = np.nan
-    st.session_state['bagging_rf_max_leaf_nodes'] = np.nan
-    st.session_state['boosting'] = np.nan
-    st.session_state['boosting_dt_criterion'] = np.nan
-    st.session_state['boosting_dt_max_depth'] = np.nan
-    st.session_state['boosting_max_leaf_nodes'] = np.nan
-    st.session_state['boosting_rf_criterion'] = np.nan
-    st.session_state['boosting_rf_max_depth'] = np.nan
-    st.session_state['boosting_rf_max_leaf_nodes'] = np.nan
-
-    st.session_state['nn_solver'] = np.nan
-    st.session_state['nn_activation'] = np.nan
-    st.session_state['nn_hidden_layer_sizes'] = np.nan
-    st.session_state['nn_max_iter'] = np.nan
-    st.session_state['nn_learning_rate_init'] = np.nan
-    st.session_state['nn_learning_rate'] = np.nan
-
-reset_session_state()
 
 # Page Setup
 st.title("Model Selection")
@@ -202,12 +224,27 @@ elif st.session_state['model'] == "Ensembles":
         pass
 
 elif st.session_state['model'] == "Neural Network":
-   st.session_state['nn_solver'] = st.radio("Solver", ("lbfgs", "sgd", "adam"), index=0, horizontal=True)
-   st.session_state['nn_activation'] = st.radio("Activation", ("logistic", "tanh", "relu"), index=0, horizontal=True)
-   st.session_state['nn_hidden_layer_sizes'] = st.slider("Hidden layer sizes", 1, 100, 5)
-   st.session_state['nn_max_iter'] = st.slider("Max iter", 1, 1000, 200)
-   st.session_state['nn_learning_rate_init'] = st.slider("Learning rate init", 0.0001, 1.0, 0.0001)
-   st.session_state['nn_learning_rate'] = st.radio("Learning rate", ("constant", "invscaling", "adaptive"), index=0, horizontal=True)
+    st.session_state['nn_solver'] = st.radio("Solver", ("lbfgs", "sgd", "adam"), index=0, horizontal=True)
+    st.session_state['nn_activation'] = st.radio("Activation", ("logistic", "tanh", "relu"), index=0, horizontal=True)
+
+    col_hl_1, col_hl_2, col_hl_3, col_hl_4, col_hl_5  = st.columns(5)
+    with col_hl_1: st.session_state['nn_hidden_layer_1'] = st.number_input("Hidden layer 1 size", 1, 100, 10)
+    with col_hl_2: st.session_state['nn_hidden_layer_2'] = st.number_input("Hidden layer 2 size", 0, 100, 0)
+    with col_hl_3: st.session_state['nn_hidden_layer_3'] = st.number_input("Hidden layer 3 size", 0, 100, 0)
+    with col_hl_4: st.session_state['nn_hidden_layer_4'] = st.number_input("Hidden layer 4 size", 0, 100, 0)
+    with col_hl_5: st.session_state['nn_hidden_layer_5'] = st.number_input("Hidden layer 5 size", 0, 100, 0)
+    col_hl_6, col_hl_7, col_hl_8, col_hl_9, col_hl_10,  = st.columns(5)
+    with col_hl_6: st.session_state['nn_hidden_layer_6'] = st.number_input("Hidden layer 6 size", 0, 100, 0)
+    with col_hl_7: st.session_state['nn_hidden_layer_7'] = st.number_input("Hidden layer 7 size", 0, 100, 0)
+    with col_hl_8: st.session_state['nn_hidden_layer_8'] = st.number_input("Hidden layer 8 size", 0, 100, 0)
+    with col_hl_9: st.session_state['nn_hidden_layer_9'] = st.number_input("Hidden layer 9 size", 0, 100, 0)
+    with col_hl_10: st.session_state['nn_hidden_layer_10'] = st.number_input("Hidden layer 10 size", 0, 100, 0)
+    st.session_state['nn_hidden_layer_sizes'] = (st.session_state['nn_hidden_layer_1'], st.session_state['nn_hidden_layer_2'], st.session_state['nn_hidden_layer_3'], st.session_state['nn_hidden_layer_4'], st.session_state['nn_hidden_layer_5'], st.session_state['nn_hidden_layer_6'], st.session_state['nn_hidden_layer_7'], st.session_state['nn_hidden_layer_8'], st.session_state['nn_hidden_layer_9'], st.session_state['nn_hidden_layer_10'])
+    st.session_state['nn_hidden_layer_sizes'] = list(filter(lambda x: x != 0, st.session_state['nn_hidden_layer_sizes']))
+
+    st.session_state['nn_max_iter'] = st.slider("Max iter", 1, 1000, 200)
+    st.session_state['nn_learning_rate_init'] = st.radio("Learning rate init", [0.0003, 0.001, 0.003, 0.01, 0.03, 0.1, 0.3, 1], index=0, horizontal=True)
+    st.session_state['nn_learning_rate'] = st.radio("Learning rate", ("constant", "invscaling", "adaptive"), index=0, horizontal=True)
 
 st.write("----")
 
@@ -585,7 +622,6 @@ if st.session_state['model_run']:
                     max_iter=st.session_state['nn_max_iter'],
                     learning_rate=st.session_state['nn_learning_rate'],
                     learning_rate_init=st.session_state['nn_learning_rate_init'],
-
                 ).fit(X_train, y_train)
 
             predictions = model.predict(X_test)
@@ -616,13 +652,17 @@ if st.session_state['model_run']:
     st.session_state['recall_val'] = round(100*np.mean(recall_val),2)
     st.session_state['f1_val'] = round(100*np.mean(f1_val),2)
 
+    df_best = pd.read_csv('model_performance_records.csv')
+    df_best = df_best[df_best['F1']==df_best['F1'].max()]
+
+
 
     st.subheader('Test Performance')
     col_metrics_1, col_metrics_2, col_metrics_3, col_metrics_4 = st.columns(4)
-    with col_metrics_1: st.metric('Accuracy', str(st.session_state['accuracy'])+'%')
-    with col_metrics_2: st.metric('Precision', str(st.session_state['precision'])+'%')
-    with col_metrics_3: st.metric('Recall', str(st.session_state['recall'])+'%')
-    with col_metrics_4: st.metric('F1', str(st.session_state['f1'])+'%')
+    with col_metrics_1: st.metric('Accuracy', str(st.session_state['accuracy'])+'%', st.session_state['accuracy']-df_best['Accuracy'].values[0])
+    with col_metrics_2: st.metric('Precision', str(st.session_state['precision'])+'%', st.session_state['precision']-df_best['Precision'].values[0])
+    with col_metrics_3: st.metric('Recall', str(st.session_state['recall'])+'%', st.session_state['recall']-df_best['Recall'].values[0])
+    with col_metrics_4: st.metric('F1', str(st.session_state['f1'])+'%', st.session_state['f1']-df_best['F1'].values[0])
 
     st.subheader('Validation Performance')
     col_metrics_val_1, col_metrics_val_2, col_metrics_val_3, col_metrics_val_4 = st.columns(4)
@@ -644,9 +684,6 @@ if st.session_state['model_run']:
     with col_outcome_2:
         st.metric("Number of Outcome = 0", str(len(st.session_state['final_predictions'][st.session_state['final_predictions']['Outcome']==0])))
 
-
-
-#st.session_state['final_predictions'] = pd.DataFrame(columns=['Outcome'])
 
 sv_data = st.session_state['final_predictions'].to_csv(index=True)
 buffer = io.BytesIO()
@@ -673,7 +710,6 @@ model_performance_record = pd.DataFrame({
     'cross_validation_splits': st.session_state['cross_validation_splits'],
     'rfe': st.session_state['rfe'],
     'num_features': st.session_state['num_features'],
-
 
     'lr_solver': st.session_state['lr_solver'],
 
@@ -705,18 +741,29 @@ model_performance_record = pd.DataFrame({
 
     'nn_solver': st.session_state['nn_solver'],
     'nn_activation': st.session_state['nn_activation'],
-    'nn_hidden_layer_sizes': st.session_state['nn_hidden_layer_sizes'],
+    #'nn_hidden_layer_sizes': st.session_state['nn_hidden_layer_sizes'],
     'nn_max_iter': st.session_state['nn_max_iter'],
     'nn_learning_rate_init': st.session_state['nn_learning_rate_init'],
     'nn_learning_rate': st.session_state['nn_learning_rate'],
+    'nn_hidden_layer_1': st.session_state['nn_hidden_layer_1'],
+    'nn_hidden_layer_2': st.session_state['nn_hidden_layer_2'],
+    'nn_hidden_layer_3': st.session_state['nn_hidden_layer_3'],
+    'nn_hidden_layer_4': st.session_state['nn_hidden_layer_4'],
+    'nn_hidden_layer_5': st.session_state['nn_hidden_layer_5'],
+    'nn_hidden_layer_6': st.session_state['nn_hidden_layer_6'],
+    'nn_hidden_layer_7': st.session_state['nn_hidden_layer_7'],
+    'nn_hidden_layer_8': st.session_state['nn_hidden_layer_8'],
+    'nn_hidden_layer_9': st.session_state['nn_hidden_layer_9'],
+    'nn_hidden_layer_10': st.session_state['nn_hidden_layer_10'],
 
 })
 
-if model_performance_record['Accuracy'] is not None:
+if model_performance_record['Accuracy'] is not np.nan:
     with open('model_performance_records.csv', mode='a') as file:
         model_performance_record.to_csv(file, header=file.tell() == 0, index=False)
+
 st.session_state['model_run'] = False
 st.write('----')
 
-st.download_button(label='Download predictions', data=sv_data, file_name='solution.csv', disabled=bool(not st.session_state['model_run']))
+st.download_button(label='Download predictions', data=sv_data, file_name='solution.csv', disabled=st.session_state['model_run'])
 
