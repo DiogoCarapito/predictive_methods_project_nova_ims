@@ -290,7 +290,6 @@ substitutes = {
     'false': False,
 }
 columns_to_replace = [
-    #'Mental preparation'
     'Disability',
     'Late enrollment',
     'Cancelled enrollment',
@@ -386,20 +385,42 @@ for variable in list_true_false_to_1_0:
     df_test_copy[variable] = df_test_copy[variable].replace({True: 1, False: 0})
 
 # 12 Feature Engeneering ova variavel total training
-training = [
-        'Cardiovascular training',
-        'Other training',
-        'Plyometric training',
-        'Sand training',
-        'Sport-specific training',
-        'Squad training',
-        'Strength training'
-        ]
-df['Total training'] = df.apply(lambda x: sum(x[col] for col in training), axis=1)
-df_test_copy['Total training'] = df_test_copy.apply(lambda x: sum(x[col] for col in training), axis=1)
+#training = [
+#        'Cardiovascular training',
+#        'Other training',
+#        'Plyometric training',
+#        'Sand training',
+#        'Sport-specific training',
+#        'Squad training',
+#        'Strength training']
+#df['Total training'] = df.apply(lambda x: sum(x[col] for col in training), axis=1)
+#df_test_copy['Total training'] = df_test_copy.apply(lambda x: sum(x[col] for col in training), axis=1)
 
 
-# LOCAL ANTIGO DO LOG/SQRT
+# SCALING
+# 14. Transformação de variáveis para o logaritmo para tratar skewness
+log_transforms = [
+    'Train bf competition',
+    'Strength training',
+    'Sand training',
+    'Recovery',
+    'Supplements',
+    'Cardiovascular training',
+    'Squad training',
+    'Physiotherapy',
+    'Plyometric training',
+    'Sport-specific training',
+    'Other training', ]
+# aplicação do logaritmo
+for variable in log_transforms:
+    if st.session_state['transform'] == "Logarithm":
+        df[variable] = np.log(df[variable] + 0.01)
+        df_test_copy[variable] = np.log(df_test_copy[variable] + 0.01)
+    elif st.session_state['transform'] == "Square root":
+        df[variable] = np.sqrt(df[variable])
+        df_test_copy[variable] = np.sqrt(df_test_copy[variable])
+    else:
+        pass
 
 # 14. Drop all missing values
 df = df.dropna()
@@ -465,7 +486,7 @@ if st.session_state['model_run']:
         X_train, X_test = X.iloc[train_index], X.iloc[test_index]
         y_train, y_test = y.iloc[train_index], y.iloc[test_index]
         X_val = X_validation.copy()
-        #X_df_test_copy = df_test_copy.copy()
+        X_df_test_copy = df_test_copy.copy()
 
         # PREPROCESSING AFTER SPLITTING
         # OUTLIERS
@@ -511,35 +532,7 @@ if st.session_state['model_run']:
             # substituição de tudo o que for superior a 1 passar a 1
             X_train[each] = X_train[each].apply(lambda x: 1 if x > 1 else x)
 
-        # SCALING
-        # 14. Transformação de variáveis para o logaritmo para tratar skewness
-        log_transforms = [
-            'Train bf competition',
-            'Strength training',
-            'Sand training',
-            'Recovery',
-            'Supplements',
-            'Cardiovascular training',
-            'Squad training',
-            'Physiotherapy',
-            'Plyometric training',
-            'Sport-specific training',
-            'Other training', ]
-        # aplicação do logaritmo
-        for variable in log_transforms:
-            if st.session_state['transform'] == "Logarithm":
-                X_train[variable] = np.log(X_train[variable] + 0.01)
-                X_val[variable] = np.log(X_val[variable] + 0.01)
-                X_test[variable] = np.log(X_test[variable] + 0.01)
-                X_df_test_copy[variable] = np.log(X_df_test_copy[variable] + 0.01)
-                df_test_copy[variable] = np.log(df_test_copy[variable] + 0.01)
-            elif st.session_state['transform'] == "Square root":
-                X_train[variable] = np.sqrt(X_train[variable])
-                X_val[variable] = np.sqrt(X_val[variable])
-                X_test[variable] = np.sqrt(X_test[variable])
-                X_df_test_copy[variable] = np.sqrt(X_df_test_copy[variable])
-            else:
-                pass
+
         #st.write(X_train.dropna().shape[0])
 
         # NORMALIZAÇÂO
@@ -605,7 +598,6 @@ if st.session_state['model_run']:
             X_val_rfe = X_val
             X_df_test_copy_rfe = X_df_test_copy
 
-
         # run the model
         #st.table(X_train.head())
         if st.session_state['model'] == "Logistic Regression":
@@ -670,7 +662,6 @@ if st.session_state['model_run']:
 
     progress_bar.progress(100)
 
-
     st.session_state['final_predictions'] = model.predict(X_df_test_copy_rfe)
     st.session_state['final_predictions'] = pd.DataFrame(st.session_state['final_predictions'], index=X_df_test_copy_rfe.index, columns=['Outcome'])
 
@@ -678,8 +669,6 @@ if st.session_state['model_run']:
     st.session_state['precision'] = round(100*np.mean(precision),2)
     st.session_state['recall'] = round(100*np.mean(recall),2)
     st.session_state['f1'] = round(100*np.mean(f1),2)
-
-
 
     st.session_state['accuracy_val'] = round(100*np.mean(accuracy_val),2)
     st.session_state['precision_val'] = round(100*np.mean(precision_val),2)
@@ -791,7 +780,7 @@ model_performance_record = pd.DataFrame({
 
     'nn_solver': st.session_state['nn_solver'],
     'nn_activation': st.session_state['nn_activation'],
-    #'nn_hidden_layer_sizes': st.session_state['nn_hidden_layer_sizes'],
+
     'nn_max_iter': st.session_state['nn_max_iter'],
     'nn_learning_rate_init': st.session_state['nn_learning_rate_init'],
     'nn_learning_rate': st.session_state['nn_learning_rate'],
