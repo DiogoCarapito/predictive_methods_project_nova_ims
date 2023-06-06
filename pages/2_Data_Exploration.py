@@ -268,8 +268,10 @@ def plot_multiple_barplots(data, feats, title):
 
     return
 
-plot_multiple_barplots(df, variaveis_categoricas, "Categorical Variables' Bar Plots")
-
+try:
+    plot_multiple_barplots(df, variaveis_categoricas, "Categorical Variables' Bar Plots")
+except:
+    st.write("Erro ao executar plot_multiple_barplots")
 
 variaveis_booleanas = list(df.select_dtypes(include='bool').columns)
 st.header('Variáveis booleanas')
