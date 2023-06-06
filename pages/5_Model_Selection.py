@@ -119,16 +119,6 @@ list_session_state_variables = [
 
 ]
 
-list_session_state_variables_2 = [
-
-    'num_knn',
-    'transform',
-    'cross_validation_splits',
-    'outlier_treatment',
-    'rfe',
-    'num_features',
-
-]
 
 for each in list_session_state_variables:
     if each not in st.session_state:
@@ -385,16 +375,16 @@ for variable in list_true_false_to_1_0:
     df_test_copy[variable] = df_test_copy[variable].replace({True: 1, False: 0})
 
 # 12 Feature Engeneering ova variavel total training
-#training = [
-#        'Cardiovascular training',
-#        'Other training',
-#        'Plyometric training',
-#        'Sand training',
-#        'Sport-specific training',
-#        'Squad training',
-#        'Strength training']
-#df['Total training'] = df.apply(lambda x: sum(x[col] for col in training), axis=1)
-#df_test_copy['Total training'] = df_test_copy.apply(lambda x: sum(x[col] for col in training), axis=1)
+training = [
+        'Cardiovascular training',
+        'Other training',
+        'Plyometric training',
+        'Sand training',
+        'Sport-specific training',
+        'Squad training',
+        'Strength training']
+df['Total training'] = df.apply(lambda x: sum(x[col] for col in training), axis=1)
+df_test_copy['Total training'] = df_test_copy.apply(lambda x: sum(x[col] for col in training), axis=1)
 
 
 # SCALING
@@ -422,14 +412,9 @@ for variable in log_transforms:
     else:
         pass
 
-# 14. Drop all missing values
+# 14. Drop remaining missing values
 df = df.dropna()
 
-#st.write("dataframe before split")
-#st.write(df.shape[0])
-#st.table(df.head(10))
-# contar numero de missing values
-#st.write("Misisng values",df.isnull().sum().sum())
 
 
 ### SPLIT ###

@@ -1,5 +1,7 @@
+# First imports
 import sys
 import streamlit as st
+
 
 # Imports and loads on google colab
 if 'google.colab' in sys.modules:
@@ -21,48 +23,86 @@ else:
 # Regular Imports
 import pandas as pd
 import numpy as np
-import matplotlib.pyplot as plt
+import datetime as dt
+from tqdm import tqdm
+import io
 
-from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
-from sklearn.neural_network import MLPClassifier
-from sklearn.feature_selection import RFE
+# sklearn imports
 from sklearn.model_selection import train_test_split, KFold
 from sklearn.linear_model import LogisticRegression
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.impute import KNNImputer
+from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
+from sklearn.model_selection import train_test_split
+from sklearn.feature_selection import RFE
+from sklearn.neural_network import MLPClassifier
 
 
-st.title("Final Solution")
-st.write("---")
+
+#from itertools import product
+
+st.set_page_config(
+    page_title="PMDM Grupo 11",
+    page_icon=":sports_medal:",
+    layout="wide")
+
+if 'final_predictions' not in st.session_state:
+    st.session_state['final_predictions'] = pd.DataFrame(columns=['Outcome'])
+
+list_session_state_variables = [
+    'accuracy',
+    'precision',
+    'recall',
+    'f1',
+    'accuracy_val',
+    'precision_val',
+    'recall_val',
+    'f1_val',
+
+    'nn_solver',
+    'nn_activation',
+    'nn_hidden_layer_sizes',
+    'nn_max_iter',
+    'nn_learning_rate_init',
+    'nn_learning_rate',
+    'nn_hidden_layer_1',
+    'nn_hidden_layer_2',
+    'nn_hidden_layer_3',
+    'nn_hidden_layer_4',
+    'nn_hidden_layer_5',
+    'nn_hidden_layer_6',
+    'nn_hidden_layer_7',
+    'nn_hidden_layer_8',
+    'nn_hidden_layer_9',
+    'nn_hidden_layer_10',
+
+]
+
+for each in list_session_state_variables:
+    if each not in st.session_state:
+       st.session_state[each] = np.nan
+
+
+# Page Setup
+st.title("Model Selection")
 
 # Data Loading
-st.title("Data Loading")
 df_train = pd.read_csv(path + 'train.csv')
 df_test = pd.read_csv(path + 'test.csv')
 
-# Colocar o RecordID como index
 df_train.set_index('RecordID', inplace=True)
 df_train.index.name = 'RecordID'
 df_test.set_index('RecordID', inplace=True)
+df_train.index.name = 'RecordID'
 
-# Mostrar dados em tabelas
-st.header("train.csv")
-st.dataframe(df_train.head())
-st.header("test.csv")
-st.dataframe(df_test.head())
-
-# Definição de tipos de variáveis
-# Target
+# Lista de variáveis
 target = 'Outcome'
 
-# Variáveis não úteis
 variaveis_nao_uteis = ['Athlete Id']
 
-# Variáveis numéricas
 variaveis_numericas = list(df_train.drop(variaveis_nao_uteis, axis=1).select_dtypes(include=['int', 'float']).columns)
 variaveis_numericas.remove(target)
 
-# Variáveis booleanas
 variaveis_booleanas = [
     'Disability',
     'Late enrollment',
@@ -73,7 +113,6 @@ variaveis_booleanas = [
     'Past injuries'
 ]
 
-# Categóricas
 variaveis_categoricas = [
     'Competition',
     'Sex',
@@ -83,12 +122,55 @@ variaveis_categoricas = [
     'Income'
 ]
 
-# Data preprocessing
-st.title("Data Preprocessing")
+
+st.write("----")
+st.subheader("NN Parameters")
+
+st.session_state['nn_solver'] = st.radio("Solver", ("lbfgs", "sgd", "adam"), index=0, horizontal=True)
+st.session_state['nn_activation'] = st.radio("Activation", ("logistic", "tanh", "relu"), index=0, horizontal=True)
+
+col_hl_1, col_hl_2, col_hl_3, col_hl_4, col_hl_5  = st.columns(5)
+with col_hl_1: st.session_state['nn_hidden_layer_1'] = st.number_input("Hidden layer 1 size", 1, 100, 10)
+with col_hl_2: st.session_state['nn_hidden_layer_2'] = st.number_input("Hidden layer 2 size", 0, 100, 0)
+with col_hl_3: st.session_state['nn_hidden_layer_3'] = st.number_input("Hidden layer 3 size", 0, 100, 0)
+with col_hl_4: st.session_state['nn_hidden_layer_4'] = st.number_input("Hidden layer 4 size", 0, 100, 0)
+with col_hl_5: st.session_state['nn_hidden_layer_5'] = st.number_input("Hidden layer 5 size", 0, 100, 0)
+col_hl_6, col_hl_7, col_hl_8, col_hl_9, col_hl_10,  = st.columns(5)
+with col_hl_6: st.session_state['nn_hidden_layer_6'] = st.number_input("Hidden layer 6 size", 0, 100, 0)
+with col_hl_7: st.session_state['nn_hidden_layer_7'] = st.number_input("Hidden layer 7 size", 0, 100, 0)
+with col_hl_8: st.session_state['nn_hidden_layer_8'] = st.number_input("Hidden layer 8 size", 0, 100, 0)
+with col_hl_9: st.session_state['nn_hidden_layer_9'] = st.number_input("Hidden layer 9 size", 0, 100, 0)
+with col_hl_10: st.session_state['nn_hidden_layer_10'] = st.number_input("Hidden layer 10 size", 0, 100, 0)
+st.session_state['nn_hidden_layer_sizes'] = (st.session_state['nn_hidden_layer_1'], st.session_state['nn_hidden_layer_2'], st.session_state['nn_hidden_layer_3'], st.session_state['nn_hidden_layer_4'], st.session_state['nn_hidden_layer_5'], st.session_state['nn_hidden_layer_6'], st.session_state['nn_hidden_layer_7'], st.session_state['nn_hidden_layer_8'], st.session_state['nn_hidden_layer_9'], st.session_state['nn_hidden_layer_10'])
+st.session_state['nn_hidden_layer_sizes'] = list(filter(lambda x: x != 0, st.session_state['nn_hidden_layer_sizes']))
+
+st.session_state['nn_max_iter'] = st.slider("Max iter", 1, 1000, 200)
+st.session_state['nn_learning_rate_init'] = st.radio("Learning rate init", [0.0003, 0.001, 0.003, 0.01, 0.03, 0.1, 0.3, 1], index=0, horizontal=True)
+st.session_state['nn_learning_rate'] = st.radio("Learning rate", ("constant", "invscaling", "adaptive"), index=0, horizontal=True)
+
+st.write("----")
+
+
+# MENU
+st.subheader("Data Preprocessing Parameters")
+
+
+st.session_state['num_knn'] = st.radio("Missing Values KNN Number of neighbors", [1, 3, 5, 7, 9, 11, 13, 15], index=2, horizontal=True)
+st.session_state['transform'] = st.radio("Transform", ("Logarithm", "Square root", "None"), index=0, horizontal=True)
+st.session_state['cross_validation_splits'] = st.radio("Cross Validation Splits", ("2 splits", "5 splits", "10 splits" ), index=1, horizontal=True)
+st.session_state['outlier_treatment'] = st.radio("Outlier outlier_treatment", ("negative_to_0", "mod (remover sinal negativo)"), index=0, horizontal=True)
+st.session_state['rfe'] = st.checkbox("Recursive Feature Elimination", value=False)
+st.session_state['num_features'] = st.slider("Number of features", 1, 40, 10, disabled = bool(not st.session_state['rfe']))
+
+
+df = df_train.copy()
+df_test_copy = df_test.copy()
+
+# PREPROCESSING BEFORE SPLITTING
 
 # 1. remover variaveis_nao_uteis
-df_train = df_train.drop(variaveis_nao_uteis, axis=1)
-df_test = df_test.drop(variaveis_nao_uteis, axis=1)
+df = df.drop(variaveis_nao_uteis, axis=1)
+df_test_copy = df_test_copy.drop(variaveis_nao_uteis, axis=1)
 
 # ERROS
 # 2. substituir errados por False e True
@@ -96,6 +178,8 @@ substitutes = {
     'FASE': False,
     'FALSE': False,
     'TRUE': True,
+    'true': True,
+    'false': False,
 }
 columns_to_replace = [
     'Disability',
@@ -107,25 +191,23 @@ columns_to_replace = [
     'Past injuries'
 ]
 for column in columns_to_replace:
-    df_train[column] = df_train[column].replace(substitutes)
-    df_test[column] = df_test[column].replace(substitutes)
+    df[column] = df[column].replace(substitutes)
+    df_test_copy[column] = df_test_copy[column].replace(substitutes)
 
-
-# 3. Substituir 0 por 0-35 na váriavel Age group
+# 3. Substituir 0 por 0-35 na variavel Age group
 substitute = {
     '0': '0-35',
 }
-df_train['Age group'] = df_train['Age group'].replace(substitute)
-df_test['Age group'] = df_test['Age group'].replace(substitute)
+df['Age group'] = df['Age group'].replace(substitute)
+df_test_copy['Age group'] = df_test_copy['Age group'].replace(substitute)
 
 # 4. Late enrollment na realidade é um booleano disfarcado de 0 e 1
-df_train['Late enrollment'] = df_train['Late enrollment'].replace({0: False,1: True})
-df_test['Late enrollment'] = df_test['Late enrollment'].replace({0: False,1: True})
+df['Late enrollment'] = df['Late enrollment'].replace({0: False,1: True})
+df_test_copy['Late enrollment'] = df_test_copy['Late enrollment'].replace({0: False,1: True})
 
 # 5. No coach na realidade é um booleano disfarcado de 0 e 1
-df_train['No coach'] = df_train['No coach'].replace({0: False,1: True})
-df_test['No coach'] = df_test['No coach'].replace({0: False,1: True})
-
+df['No coach'] = df['No coach'].replace({0: False,1: True})
+df_test_copy['No coach'] = df_test_copy['No coach'].replace({0: False,1: True})
 
 # MISSING VAULES
 # 6. missing values pela moda em variaves categoricas
@@ -139,9 +221,9 @@ dict_variavel_sub = {
     'No coach': False,
 }
 for variavel, valor_sub in dict_variavel_sub.items():
-    df_train[variavel] = df_train[variavel].fillna(valor_sub)
+    df[variavel] = df[variavel].fillna(valor_sub)
 
-# 8. missing values por KNN = 9
+# 8. missing values por KNN = 5
 list_mising_numerical = [
     'Cardiovascular training',
     'Other training',
@@ -157,8 +239,8 @@ list_mising_numerical = [
     'Squad training',
     'Athlete score',
 ]
-imputer = KNNImputer(n_neighbors=9)
-df_train[list_mising_numerical] = imputer.fit_transform(df_train[list_mising_numerical])
+imputer = KNNImputer(n_neighbors=st.session_state['num_knn'])
+df[list_mising_numerical] = imputer.fit_transform(df[list_mising_numerical])
 
 
 # ENCODING
@@ -171,22 +253,19 @@ list_one_hot_encoding = [
     'Income',
     'Sex',
 ]
-
 # filtrar do dataframe original só as variaveis para one hot
-df_one_hot_encoding = df_train[list_one_hot_encoding]
+df_one_hot_encoding = df[list_one_hot_encoding]
 # one hot encoding, eliminando a primeira coluna de forma a não dar erro
 df_one_hot_encoded = pd.get_dummies(df_one_hot_encoding, drop_first=True)
 # Junção das novas colunas com o dataframe original
-df_merged = df_train.merge(df_one_hot_encoded, left_index=True, right_index=True)
+df_merged = df.merge(df_one_hot_encoded, left_index=True, right_index=True)
 # remoção das colunas antigas
-df_train = df_merged.drop(list_one_hot_encoding, axis=1)
+df = df_merged.drop(list_one_hot_encoding, axis=1)
 
-# Fazer o mesmo para o df_test
-df_test_hot_encoding = df_test[list_one_hot_encoding]
-df_test_hot_encoding = pd.get_dummies(df_test_hot_encoding, drop_first=True)
-df_merged_test = df_test.merge(df_test_hot_encoding, left_index=True, right_index=True)
-df_test = df_merged_test.drop(list_one_hot_encoding, axis=1)
-
+df_test_copydf_test_copy = df_test_copy[list_one_hot_encoding]
+df_one_hot_encoded_test = pd.get_dummies(df_test_copydf_test_copy, drop_first=True)
+df_merged_test = df_test_copy.merge(df_one_hot_encoded_test, left_index=True, right_index=True)
+df_test_copy = df_merged_test.drop(list_one_hot_encoding, axis=1)
 
 # 11. True False to 1 0
 #list_true_false_to_1_0 = list(df.select_dtypes(include='bool').columns)
@@ -194,13 +273,24 @@ list_true_false_to_1_0 = variaveis_booleanas
 # iteração sobre variaveis
 for variable in list_true_false_to_1_0:
     # substituição de valores acima de 0 para 1
-    df_train[variable] = df_train[variable].replace({True: 1, False: 0})
+    df[variable] = df[variable].replace({True: 1, False: 0})
     df_test_copy[variable] = df_test_copy[variable].replace({True: 1, False: 0})
 
+# 12 Feature Engeneering ova variavel total training
+training = [
+        'Cardiovascular training',
+        'Other training',
+        'Plyometric training',
+        'Sand training',
+        'Sport-specific training',
+        'Squad training',
+        'Strength training']
+df['Total training'] = df.apply(lambda x: sum(x[col] for col in training), axis=1)
+df_test_copy['Total training'] = df_test_copy.apply(lambda x: sum(x[col] for col in training), axis=1)
 
 
 # SCALING
-# 12. Transformação de variáveis para o logaritmo para tratar skewness
+# 14. Transformação de variáveis para o logaritmo para tratar skewness
 log_transforms = [
     'Train bf competition',
     'Strength training',
@@ -212,34 +302,37 @@ log_transforms = [
     'Physiotherapy',
     'Plyometric training',
     'Sport-specific training',
-    'Other training',]
+    'Other training', ]
 # aplicação do logaritmo
-
 for variable in log_transforms:
-    df_train[variable] = np.log(df_train[variable] + 0.01)
-    df_test[variable] = np.log(df_test[variable] + 0.01)
+    if st.session_state['transform'] == "Logarithm":
+        df[variable] = np.log(df[variable] + 0.01)
+        df_test_copy[variable] = np.log(df_test_copy[variable] + 0.01)
+    elif st.session_state['transform'] == "Square root":
+        df[variable] = np.sqrt(df[variable])
+        df_test_copy[variable] = np.sqrt(df_test_copy[variable])
+    else:
+        pass
 
-# 9. Drop all missing values
-df_train = df_train.dropna()
-
-#st.dataframe(df_train.describe().T)
-#st.dataframe(df_test.describe().T)
+# 14. Drop remaining missing values
+df = df.dropna()
 
 
-#SPLIT
-X_df_train = df_train.loc[:, df_train.columns != 'Outcome']
-y_df_train = df_train['Outcome']
+### SPLIT ###
+# X and y
+X_df = df.loc[:, df.columns != 'Outcome']
+y_df = df['Outcome']
 
-X_df_test = df_test.loc[:, df_test.columns != 'Outcome']
+X_df_test_copy = df_test_copy.loc[:, df_test_copy.columns != 'Outcome']
 
 
 X, X_validation, y, y_validation = train_test_split(
-    X_df_train,
-    y_df_train,
+    X_df,
+    y_df,
     test_size=0.20,
     random_state=15,
     shuffle=True,
-    stratify=y_df_train
+    stratify=y_df
 )
 
 accuracy = []
@@ -252,56 +345,288 @@ precision_val = []
 recall_val = []
 f1_val = []
 
-# CROSS VALIDATION
-num_splits = 5
+if 'model_run' not in st.session_state:
+    st.session_state['model_run'] = False
 
-# method: KFold
-for train_index, test_index in KFold(n_splits=num_splits).split(X):
+st.button("Run Model", type="primary", on_click=lambda: st.session_state.update(model_run=True))
 
-    X_train, X_test = X.iloc[train_index], X.iloc[test_index]
-    y_train, y_test = y.iloc[train_index], y.iloc[test_index]
-    X_val = X_validation.copy()
-    #X_df_test_copy = df_test_copy.copy()
+if st.session_state['model_run']:
+    st.write("----")
+    st.write("Running model...")
+    progress_bar = st.progress(0)
+    progress = 0
 
-    # PREPROCESSING AFTER SPLITTING
-    # OUTLIERS
+    # CROSS VALIDATION
+    if st.session_state['cross_validation_splits'] == "2 splits":
+        num_splits = 2
+    elif st.session_state['cross_validation_splits'] == "5 splits":
+        num_splits = 5
+    else:
+        num_splits = 10
 
-    # 1. substituir athlet score < 0 por 0
-    X_train['Athlete score'] = X_train['Athlete score'].apply(lambda x: 0 if x < 0 else x).astype(float)
+    # method: KFold
+    for train_index, test_index in tqdm(KFold(n_splits=num_splits).split(X)):
+        progress += 1 / (num_splits+1)
+        progress_bar.progress(progress)
 
-    # 2. substituir physiotherapy < 0 por 0
-    X_train['Physiotherapy'] = X_train['Physiotherapy'].apply(lambda x: 0 if x < 0 else x).astype(float)
+        X_train, X_test = X.iloc[train_index], X.iloc[test_index]
+        y_train, y_test = y.iloc[train_index], y.iloc[test_index]
+        X_val = X_validation.copy()
+        X_df_test_copy = df_test_copy.copy()
 
-        # Aletrtiva outliers
-        # 1. substituir athlet score < 0 por pelo modulo abs()
-        #X_train['Athlete score'] = X_train['Athlete score'].apply(abs)
+        # PREPROCESSING AFTER SPLITTING
+        # OUTLIERS
+        if st.session_state['outlier_treatment'] == 'negative_to_0':
 
-        # 2. substituir physiotherapy < 0 por pelo modulo abs()
-        #X_train['Physiotherapy'] = X_train['Physiotherapy'].apply(abs)
+            # 1. substituir athlet score < 0 por 0
+            X_train['Athlete score'] = X_train['Athlete score'].apply(lambda x: 0 if x < 0 else x).astype(float)
 
-    # 3. substituir athlete score > 100 por 100
-    X_train['Athlete score'] = X_train['Athlete score'].apply(lambda x: 100 if x > 100 else x).astype(float)
+            # 2. substituir physiotherapy < 0 por 0
+            X_train['Physiotherapy'] = X_train['Physiotherapy'].apply(lambda x: 0 if x < 0 else x).astype(float)
 
-    # 4. substituir valores de skewness muito elevados por um tecto maximo
-    #high_skewness_variables = {
-        #'Sand training': 500,
-        #'Recovery': 4000,
-        #'Cardiovascular training': 4000,
-        #'Squad training': 150,
-        #'Physiotherapy': 800,
-        #'Sport-specific training': 320,
-        #'Other training': 130,
-    #}
-    #for key, value in high_skewness_variables.items():
-        #X_train[key] = X_train[key].apply(lambda x: value if x > value else x).astype(float)
+        else:
+            # 1. substituir athlet score < 0 por pelo modulo abs()
+            X_train['Athlete score'] = X_train['Athlete score'].apply(abs)
 
-    # 13. substituir valores de skewness muito elevados por um valor mais pequeno
-    skewed_data = [
-        'Previous attempts',
-        'Sand training',
-        'Plyometric training',
-        'Other training', ]
-    # iteração pelo skewed data
-    for each in skewed_data:
-        # substituição de tudo o que for superior a 1 passar a 1
-        X_train[each] = X_train[each].apply(lambda x: 1 if x > 1 else x)
+            # 2. substituir physiotherapy < 0 por pelo modulo abs()
+            X_train['Physiotherapy'] = X_train['Physiotherapy'].apply(abs)
+
+        # 3. substituir athlete score > 100 por 100
+        X_train['Athlete score'] = X_train['Athlete score'].apply(lambda x: 100 if x > 100 else x).astype(float)
+
+        # 4. substituir valores de skewness muito elevados por um tecto maximo
+        high_skewness_variables = {
+            'Sand training': 500,
+            'Recovery': 4000,
+            'Cardiovascular training': 4000,
+            'Squad training': 150,
+            'Physiotherapy': 800,
+            'Sport-specific training': 320,
+            'Other training': 130,
+        }
+        for key, value in high_skewness_variables.items():
+            X_train[key] = X_train[key].apply(lambda x: value if x > value else x).astype(float)
+
+        # 13. substituir valores de skewness muito elevados por um valor mais pequeno
+        skewed_data = [
+            'Previous attempts',
+            'Sand training',
+            'Plyometric training',
+            'Other training', ]
+        # iteração pelo skewed data
+        for each in skewed_data:
+            # substituição de tudo o que for superior a 1 passar a 1
+            X_train[each] = X_train[each].apply(lambda x: 1 if x > 1 else x)
+
+
+        #st.write(X_train.dropna().shape[0])
+
+        # NORMALIZAÇÂO
+        # 15. mimmax scaler
+        minmax_scaler = MinMaxScaler()
+        # filtrar dataframe apenas pelas variáveis numéricas
+        #variaveis_numericas = X_train.select_dtypes(include=['int', 'float']).columns.tolist()
+        #st.write(variaveis_numericas)
+
+        # execução do MinMax (todas as variaceis são numericas neste momento por isso não é necessário filtrar, graças a )
+
+        minmax_scaler = minmax_scaler.fit(X_train)
+        minmax_train = minmax_scaler.transform(X_train)
+        # Transforma resultado num dataframe
+        minmax_train = pd.DataFrame(
+            minmax_train,
+            columns = X_train.columns,
+            index = X_train.index)
+        # Substituir valores no dataframe original para novos valores MinMax
+        X_train = minmax_train
+
+        minmax_test = minmax_scaler.transform(X_test)
+        minmax_test = pd.DataFrame(
+            minmax_test,
+            columns = X_test.columns,
+            index = X_test.index)
+        X_test = minmax_test
+
+        #st.write(X_val.columns)
+        minmax_val = minmax_scaler.transform(X_val)
+        minmax_val = pd.DataFrame(
+            minmax_val,
+            columns = X_val.columns,
+            index = X_val.index)
+        X_val = minmax_val
+
+        #st.write(X_df_test_copy.columns)
+        #st.table(X_df_test_copy.head(3))
+        X_minmax_df_test_copy = minmax_scaler.transform(X_df_test_copy)
+        #st.write(X_minmax_df_test_copy)
+        X_minmax_df_test_copy = pd.DataFrame(
+            X_minmax_df_test_copy,
+            columns=X_df_test_copy.columns,
+            index=X_df_test_copy.index)
+        X_df_test_copy = X_minmax_df_test_copy
+
+
+        # RFE
+        # 16. Recursive Feature Elimination
+        if st.session_state['rfe'] is True:
+            rfe_model = LogisticRegression()
+            rfe = RFE(estimator=rfe_model, n_features_to_select=st.session_state['num_features'])
+            X_rfe = rfe.fit_transform(X=X_train, y=y_train)
+            selected_features = pd.Series(rfe.support_, index=X_train.columns)
+            X_test_rfe = X_test.loc[:, selected_features]
+            X_train_rfe = X_train.loc[:, selected_features]
+            X_val_rfe = X_val.loc[:, selected_features]
+            X_df_test_copy_rfe = X_df_test_copy.loc[:, selected_features]
+            #st.write(selected_features)
+        else:
+            X_test_rfe = X_test
+            X_train_rfe = X_train
+            X_val_rfe = X_val
+            X_df_test_copy_rfe = X_df_test_copy
+
+
+        model = MLPClassifier(
+            hidden_layer_sizes = st.session_state['nn_hidden_layer_sizes'],
+            activation = st.session_state['nn_activation'],
+            solver = st.session_state['nn_solver'],
+            max_iter=st.session_state['nn_max_iter'],
+            learning_rate=st.session_state['nn_learning_rate'],
+            learning_rate_init=st.session_state['nn_learning_rate_init'],
+        ).fit(X_train_rfe, y_train)
+
+        predictions = model.predict(X_test_rfe)
+
+
+        accuracy.append(accuracy_score(y_test, predictions))
+        precision.append(precision_score(y_test, predictions))
+        recall.append(recall_score(y_test, predictions))
+        f1.append(f1_score(y_test, predictions))
+
+        predictions_val = model.predict(X_val_rfe)
+        accuracy_val.append(accuracy_score(y_validation, predictions_val))
+        precision_val.append(precision_score(y_validation, predictions_val))
+        recall_val.append(recall_score(y_validation, predictions_val))
+        f1_val.append(f1_score(y_validation, predictions_val))
+
+    progress_bar.progress(100)
+
+    st.session_state['final_predictions'] = model.predict(X_df_test_copy_rfe)
+    st.session_state['final_predictions'] = pd.DataFrame(st.session_state['final_predictions'], index=X_df_test_copy_rfe.index, columns=['Outcome'])
+
+    st.session_state['accuracy'] = round(100*np.mean(accuracy),2)
+    st.session_state['precision'] = round(100*np.mean(precision),2)
+    st.session_state['recall'] = round(100*np.mean(recall),2)
+    st.session_state['f1'] = round(100*np.mean(f1),2)
+
+    st.session_state['accuracy_val'] = round(100*np.mean(accuracy_val),2)
+    st.session_state['precision_val'] = round(100*np.mean(precision_val),2)
+    st.session_state['recall_val'] = round(100*np.mean(recall_val),2)
+    st.session_state['f1_val'] = round(100*np.mean(f1_val),2)
+
+
+    df_best = pd.read_csv('nn_performance_records.csv')
+    df_best = df_best[df_best['F1']==df_best['F1'].max()]
+
+
+    st.subheader('Test Performance')
+    st.write("Com comparação com o melhor modelo encontrado até o momento")
+    try:
+        col_metrics_1, col_metrics_2, col_metrics_3, col_metrics_4 = st.columns(4)
+        with col_metrics_1:
+            st.metric('Accuracy', str(st.session_state['accuracy'])+'%', str(round(st.session_state['accuracy']-df_best['Accuracy'].values[0],2)) + '%')
+        with col_metrics_2:
+            st.metric('Precision', str(st.session_state['precision'])+'%', str(round(st.session_state['precision']-df_best['Precision'].values[0],2))+'%')
+        with col_metrics_3:
+            st.metric('Recall', str(st.session_state['recall'])+'%', str(round(st.session_state['recall']-df_best['Recall'].values[0],2))+ '%')
+        with col_metrics_4:
+            st.metric('F1', str(st.session_state['f1'])+'%', str(round(st.session_state['f1']-df_best['F1'].values[0],2))+ '%')
+    except:
+        col_metrics_1, col_metrics_2, col_metrics_3, col_metrics_4 = st.columns(4)
+        with col_metrics_1:
+            st.metric('Accuracy', str(st.session_state['accuracy']) + '%')
+        with col_metrics_2:
+            st.metric('Precision', str(st.session_state['precision']) + '%')
+        with col_metrics_3:
+            st.metric('Recall', str(st.session_state['recall']) + '%')
+        with col_metrics_4:
+            st.metric('F1', str(st.session_state['f1']) + '%')
+
+    st.subheader('Validation Performance')
+    st.write("Com comparação entre treino e validação")
+    col_metrics_val_1, col_metrics_val_2, col_metrics_val_3, col_metrics_val_4 = st.columns(4)
+    with col_metrics_val_1:
+        st.metric('Accuracy', str(st.session_state['accuracy_val']) + '%', str(round(st.session_state['accuracy_val']-st.session_state['accuracy'], 2))+"%")
+    with col_metrics_val_2:
+        st.metric('Precision', str(st.session_state['precision_val']) + '%', str(round(st.session_state['precision_val']-st.session_state['precision'], 2))+"%")
+    with col_metrics_val_3:
+        st.metric('Recall', str(st.session_state['recall_val']) + '%', str(round(st.session_state['recall_val']-st.session_state['recall'], 2))+"%")
+    with col_metrics_val_4:
+        st.metric('F1', str(st.session_state['f1_val']) + '%', str(round(st.session_state['f1_val']-st.session_state['f1'], 2))+"%")
+
+
+    st.write("----")
+
+    col_outcome_1, col_outcome_2 = st.columns(2)
+    with col_outcome_1:
+        st.metric("Number of Outcome = 1", str(len(st.session_state['final_predictions'][st.session_state['final_predictions']['Outcome']==1])))
+    with col_outcome_2:
+        st.metric("Number of Outcome = 0", str(len(st.session_state['final_predictions'][st.session_state['final_predictions']['Outcome']==0])))
+
+
+    sv_data = st.session_state['final_predictions'].to_csv(index=True)
+    buffer = io.BytesIO()
+    buffer.write(sv_data.encode())
+    buffer.seek(0)
+
+model_performance_record = pd.DataFrame({
+    'Date': [dt.datetime.now().strftime("%d/%m/%Y %H:%M:%S")],
+    'Model': [st.session_state['model']],
+    'Accuracy': st.session_state['accuracy'],
+    'Precision': st.session_state['precision'],
+    'Recall': st.session_state['recall'],
+    'F1': st.session_state['f1'],
+    'Accuracy_val': st.session_state['accuracy_val'],
+    'Precision_val': st.session_state['precision_val'],
+    'Recall_val': st.session_state['recall_val'],
+    'F1_val': st.session_state['f1_val'],
+    'Number of Outcome = 1': len(st.session_state['final_predictions'][st.session_state['final_predictions']['Outcome']==1]),
+    'Number of Outcome = 0': len(st.session_state['final_predictions'][st.session_state['final_predictions']['Outcome']==0]),
+
+    'num_knn': st.session_state['num_knn'],
+    'transform': st.session_state['transform'],
+    'cross_validation_splits': st.session_state['cross_validation_splits'],
+    'outlier_treatment': st.session_state['outlier_treatment'],
+    'rfe': st.session_state['rfe'],
+    'num_features': st.session_state['num_features'],
+
+    'nn_solver': st.session_state['nn_solver'],
+    'nn_activation': st.session_state['nn_activation'],
+
+    'nn_max_iter': st.session_state['nn_max_iter'],
+    'nn_learning_rate_init': st.session_state['nn_learning_rate_init'],
+    'nn_learning_rate': st.session_state['nn_learning_rate'],
+    'nn_hidden_layer_1': st.session_state['nn_hidden_layer_1'],
+    'nn_hidden_layer_2': st.session_state['nn_hidden_layer_2'],
+    'nn_hidden_layer_3': st.session_state['nn_hidden_layer_3'],
+    'nn_hidden_layer_4': st.session_state['nn_hidden_layer_4'],
+    'nn_hidden_layer_5': st.session_state['nn_hidden_layer_5'],
+    'nn_hidden_layer_6': st.session_state['nn_hidden_layer_6'],
+    'nn_hidden_layer_7': st.session_state['nn_hidden_layer_7'],
+    'nn_hidden_layer_8': st.session_state['nn_hidden_layer_8'],
+    'nn_hidden_layer_9': st.session_state['nn_hidden_layer_9'],
+    'nn_hidden_layer_10': st.session_state['nn_hidden_layer_10'],
+
+})
+
+if st.session_state['model_run'] is True:
+    with open('nn_performance_records.csv', mode='a') as file:
+        model_performance_record.to_csv(file, header=file.tell() == 0, index=False)
+
+    st.session_state['model_run'] = False
+
+st.write('----')
+
+try:
+    st.download_button(label='Download predictions', data=sv_data, file_name='solution.csv', disabled=st.session_state['model_run'])
+except:
+    pass
