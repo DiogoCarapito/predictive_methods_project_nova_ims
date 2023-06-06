@@ -52,6 +52,7 @@ st.set_page_config(
 
 if 'final_predictions' not in st.session_state:
     st.session_state['final_predictions'] = pd.DataFrame(columns=['Outcome'])
+
 list_session_state_variables = [
     'accuracy',
     'precision',
@@ -179,7 +180,7 @@ st.session_state['model'] = st.radio("Model Selection", (
     "Naive Bayes",
     "Decision Tree",
     "Random Forest",
-    "Ensembles",
+    #"Ensembles",
     "Neural Network"
 ), index=0, horizontal=True)
 
@@ -191,7 +192,7 @@ if st.session_state['model'] == "Logistic Regression":
    st.session_state['lr_solver']
 
 elif st.session_state['model'] == "KNN":
-   st.session_state['knn_n_neighbors'] = st.slider("Number of neighbors", 1, 40, 5, )
+   st.session_state['knn_n_neighbors'] = st.slider("Number of neighbors",min_value=1,max_value=25, value=5, step=2)
 
 elif st.session_state['model'] == "Naive Bayes":
     pass
@@ -285,6 +286,8 @@ substitutes = {
     'FASE': False,
     'FALSE': False,
     'TRUE': True,
+    'true': True,
+    'false': False,
 }
 columns_to_replace = [
     #'Mental preparation'
@@ -374,17 +377,30 @@ df_merged_test = df_test_copy.merge(df_one_hot_encoded_test, left_index=True, ri
 df_test_copy = df_merged_test.drop(list_one_hot_encoding, axis=1)
 
 # 11. True False to 1 0
-list_true_false_to_1_0 = list(df.select_dtypes(include='bool').columns)
-#st.write(list_true_false_to_1_0)
+#list_true_false_to_1_0 = list(df.select_dtypes(include='bool').columns)
+list_true_false_to_1_0 = variaveis_booleanas
 # iteração sobre variaveis
 for variable in list_true_false_to_1_0:
     # substituição de valores acima de 0 para 1
     df[variable] = df[variable].replace({True: 1, False: 0})
     df_test_copy[variable] = df_test_copy[variable].replace({True: 1, False: 0})
 
+# 12 Feature Engeneering ova variavel total training
+training = [
+        'Cardiovascular training',
+        'Other training',
+        'Plyometric training',
+        'Sand training',
+        'Sport-specific training',
+        'Squad training',
+        'Strength training'
+        ]
+df['Total training'] = df.apply(lambda x: sum(x[col] for col in training), axis=1)
+df_test_copy['Total training'] = df_test_copy.apply(lambda x: sum(x[col] for col in training), axis=1)
+
 
 # SCALING
-# 12. Transformação de variáveis para o logaritmo para tratar skewness
+# 13. Transformação de variáveis para o logaritmo para tratar skewness
 log_transforms = [
     'Train bf competition',
     'Strength training',
@@ -396,27 +412,19 @@ log_transforms = [
     'Physiotherapy',
     'Plyometric training',
     'Sport-specific training',
-    'Other training',
-    'Total training']
+    'Other training',]
 # aplicação do logaritmo
 for variable in log_transforms:
-    try:
-        if st.session_state['transform'] == "Logarithm":
-            df[variable] = np.log(df[variable] + 0.01)
-            df_test_copy[variable] = np.log(df_test_copy[variable] + 0.01)
-        elif st.session_state['transform'] == "Square root":
-            df[variable] = np.sqrt(df[variable])
-            df_test_copy[variable] = np.sqrt(df_test_copy[variable])
-        else:
-            pass
-    except:
+    if st.session_state['transform'] == "Logarithm":
+        df[variable] = np.log(df[variable] + 0.01)
+        df_test_copy[variable] = np.log(df_test_copy[variable] + 0.01)
+    elif st.session_state['transform'] == "Square root":
+        df[variable] = np.sqrt(df[variable])
+        df_test_copy[variable] = np.sqrt(df_test_copy[variable])
+    else:
         pass
 
-
-
-
-
-# 9. Drop all missing values
+# 14. Drop all missing values
 df = df.dropna()
 
 #st.write("dataframe before split")
@@ -442,8 +450,6 @@ X, X_validation, y, y_validation = train_test_split(
     shuffle=True,
     stratify=y_df
 )
-
-
 
 accuracy = []
 precision = []
@@ -482,7 +488,7 @@ if st.session_state['model_run']:
         X_train, X_test = X.iloc[train_index], X.iloc[test_index]
         y_train, y_test = y.iloc[train_index], y.iloc[test_index]
         X_val = X_validation.copy()
-        X_df_test_copy = df_test_copy.copy()
+        #X_df_test_copy = df_test_copy.copy()
 
         # PREPROCESSING AFTER SPLITTING
         # OUTLIERS
@@ -532,46 +538,45 @@ if st.session_state['model_run']:
         # 14. mimmax scaler
         minmax_scaler = MinMaxScaler()
         # filtrar dataframe apenas pelas variáveis numéricas
-        variaveis_numericas = X_train.select_dtypes(include='number').columns.tolist()
+        #variaveis_numericas = X_train.select_dtypes(include=['int', 'float']).columns.tolist()
+        #st.write(variaveis_numericas)
 
-        df_numericas = X_train[variaveis_numericas]
+        # execução do MinMax (todas as variaceis são numericas neste momento por isso não é necessário filtrar, graças a )
 
-        # execução do MinMax
-        minmax_scaler = minmax_scaler.fit(df_numericas)
-
-        minmax_train = minmax_scaler.transform(df_numericas)
+        minmax_scaler = minmax_scaler.fit(X_train)
+        minmax_train = minmax_scaler.transform(X_train)
         # Transforma resultado num dataframe
         minmax_train = pd.DataFrame(
             minmax_train,
-            columns = df_numericas.columns,
-            index = df_numericas.index)
+            columns = X_train.columns,
+            index = X_train.index)
         # Substituir valores no dataframe original para novos valores MinMax
-        X_train[variaveis_numericas] = minmax_train
+        X_train = minmax_train
 
-        minmax_test = minmax_scaler.transform(X_test[variaveis_numericas])
+        minmax_test = minmax_scaler.transform(X_test)
         minmax_test = pd.DataFrame(
             minmax_test,
-            columns = X_test[variaveis_numericas].columns,
-            index = X_test[variaveis_numericas].index)
-        X_test[variaveis_numericas] = minmax_test
+            columns = X_test.columns,
+            index = X_test.index)
+        X_test = minmax_test
 
         #st.write(X_val.columns)
-        minmax_val = minmax_scaler.transform(X_val[variaveis_numericas])
+        minmax_val = minmax_scaler.transform(X_val)
         minmax_val = pd.DataFrame(
             minmax_val,
-            columns = X_val[variaveis_numericas].columns,
-            index = X_val[variaveis_numericas].index)
-        X_val[variaveis_numericas] = minmax_val
+            columns = X_val.columns,
+            index = X_val.index)
+        X_val = minmax_val
 
         #st.write(X_df_test_copy.columns)
         #st.table(X_df_test_copy.head(3))
-        X_minmax_df_test_copy = minmax_scaler.transform(X_df_test_copy[variaveis_numericas])
+        X_minmax_df_test_copy = minmax_scaler.transform(X_df_test_copy)
         #st.write(X_minmax_df_test_copy)
         X_minmax_df_test_copy = pd.DataFrame(
             X_minmax_df_test_copy,
-            columns=X_df_test_copy[variaveis_numericas].columns,
-            index=X_df_test_copy[variaveis_numericas].index)
-        X_df_test_copy[variaveis_numericas] = X_minmax_df_test_copy
+            columns=X_df_test_copy.columns,
+            index=X_df_test_copy.index)
+        X_df_test_copy = X_minmax_df_test_copy
 
 
         # RFE
@@ -581,34 +586,40 @@ if st.session_state['model_run']:
             rfe = RFE(estimator=rfe_model, n_features_to_select=st.session_state['num_features'])
             X_rfe = rfe.fit_transform(X=X_train, y=y_train)
             selected_features = pd.Series(rfe.support_, index=X_train.columns)
-            X_test = X_test.loc[:, selected_features]
-            X_train = X_train.loc[:, selected_features]
-            X_val = X_val.loc[:, selected_features]
-            X_df_test_copy = X_df_test_copy.loc[:, selected_features]
-            #st.write(list(selected_features))
+            X_test_rfe = X_test.loc[:, selected_features]
+            X_train_rfe = X_train.loc[:, selected_features]
+            X_val_rfe = X_val.loc[:, selected_features]
+            X_df_test_copy_rfe = X_df_test_copy.loc[:, selected_features]
+            #st.write(selected_features)
+        else:
+            X_test_rfe = X_test
+            X_train_rfe = X_train
+            X_val_rfe = X_val
+            X_df_test_copy_rfe = X_df_test_copy
+
 
         # run the model
         #st.table(X_train.head())
         if st.session_state['model'] == "Logistic Regression":
             model = LogisticRegression(
                 solver = st.session_state['lr_solver']
-            ).fit(X_train, y_train)
+            ).fit(X_train_rfe, y_train)
         elif st.session_state['model'] == "Random Forest":
             model = RandomForestClassifier(
                 criterion = st.session_state['rf_criterion'],
                 max_depth = st.session_state['rf_max_depth'],
                 max_leaf_nodes = st.session_state['rf_max_leaf_nodes'],
-            ).fit(X_train, y_train)
+            ).fit(X_train_rfe, y_train)
         elif st.session_state['model'] == "Decision Tree":
             model = DecisionTreeClassifier(
                 max_leaf_nodes = st.session_state['dt_max_leaf_nodes'],
                 max_depth = st.session_state['dt_max_depth'],
                 criterion = st.session_state['dt_criterion'],
-            ).fit(X_train, y_train)
+            ).fit(X_train_rfe, y_train)
         elif st.session_state['model'] == "KNN":
             model = KNeighborsClassifier(
                 n_neighbors=st.session_state['knn_n_neighbors']
-            ).fit(X_train, y_train)
+            ).fit(X_train_rfe, y_train)
         elif st.session_state['model'] == "Ensambles":
             model = VotingClassifier(
                 estimators=[
@@ -621,9 +632,9 @@ if st.session_state['model_run']:
                     ('mlp', MLPClassifier())
                 ],
                 voting='hard'
-            ).fit(X_train, y_train)
+            ).fit(X_train_rfe, y_train)
         elif st.session_state['model'] == "Naive Bayes":
-            model = GaussianNB().fit(X_train, y_train)
+            model = GaussianNB().fit(X_train_rfe, y_train)
 
         elif st.session_state['model'] == "Neural Network":
             model = MLPClassifier(
@@ -633,9 +644,9 @@ if st.session_state['model_run']:
                 max_iter=st.session_state['nn_max_iter'],
                 learning_rate=st.session_state['nn_learning_rate'],
                 learning_rate_init=st.session_state['nn_learning_rate_init'],
-            ).fit(X_train, y_train)
+            ).fit(X_train_rfe, y_train)
 
-        predictions = model.predict(X_test)
+        predictions = model.predict(X_test_rfe)
 
 
         accuracy.append(accuracy_score(y_test, predictions))
@@ -643,7 +654,7 @@ if st.session_state['model_run']:
         recall.append(recall_score(y_test, predictions))
         f1.append(f1_score(y_test, predictions))
 
-        predictions_val = model.predict(X_val)
+        predictions_val = model.predict(X_val_rfe)
         accuracy_val.append(accuracy_score(y_validation, predictions_val))
         precision_val.append(precision_score(y_validation, predictions_val))
         recall_val.append(recall_score(y_validation, predictions_val))
@@ -652,8 +663,8 @@ if st.session_state['model_run']:
     progress_bar.progress(100)
 
 
-    st.session_state['final_predictions'] = model.predict(X_df_test_copy)
-    st.session_state['final_predictions'] = pd.DataFrame(st.session_state['final_predictions'], index=X_df_test_copy.index, columns=['Outcome'])
+    st.session_state['final_predictions'] = model.predict(X_df_test_copy_rfe)
+    st.session_state['final_predictions'] = pd.DataFrame(st.session_state['final_predictions'], index=X_df_test_copy_rfe.index, columns=['Outcome'])
 
     st.session_state['accuracy'] = round(100*np.mean(accuracy),2)
     st.session_state['precision'] = round(100*np.mean(precision),2)
@@ -673,16 +684,17 @@ if st.session_state['model_run']:
 
 
     st.subheader('Test Performance')
+    st.write("Com comparação com o melhor modelo encontrado até o momento")
     try:
         col_metrics_1, col_metrics_2, col_metrics_3, col_metrics_4 = st.columns(4)
         with col_metrics_1:
-            st.metric('Accuracy', str(st.session_state['accuracy'])+'%', st.session_state['accuracy']-df_best['Accuracy'].values[0])
+            st.metric('Accuracy', str(st.session_state['accuracy'])+'%', str(round(st.session_state['accuracy']-df_best['Accuracy'].values[0],2)) + '%')
         with col_metrics_2:
-            st.metric('Precision', str(st.session_state['precision'])+'%', st.session_state['precision']-df_best['Precision'].values[0])
+            st.metric('Precision', str(st.session_state['precision'])+'%', str(round(st.session_state['precision']-df_best['Precision'].values[0],2))+'%')
         with col_metrics_3:
-            st.metric('Recall', str(st.session_state['recall'])+'%', st.session_state['recall']-df_best['Recall'].values[0])
+            st.metric('Recall', str(st.session_state['recall'])+'%', str(round(st.session_state['recall']-df_best['Recall'].values[0],2))+ '%')
         with col_metrics_4:
-            st.metric('F1', str(st.session_state['f1'])+'%', st.session_state['f1']-df_best['F1'].values[0])
+            st.metric('F1', str(st.session_state['f1'])+'%', str(round(st.session_state['f1']-df_best['F1'].values[0],2))+ '%')
     except:
         col_metrics_1, col_metrics_2, col_metrics_3, col_metrics_4 = st.columns(4)
         with col_metrics_1:
@@ -693,7 +705,9 @@ if st.session_state['model_run']:
             st.metric('Recall', str(st.session_state['recall']) + '%')
         with col_metrics_4:
             st.metric('F1', str(st.session_state['f1']) + '%')
+
     st.subheader('Validation Performance')
+    st.write("Com comparação entre treino e validação")
     col_metrics_val_1, col_metrics_val_2, col_metrics_val_3, col_metrics_val_4 = st.columns(4)
     with col_metrics_val_1:
         st.metric('Accuracy', str(st.session_state['accuracy_val']) + '%', str(round(st.session_state['accuracy_val']-st.session_state['accuracy'], 2))+"%")
