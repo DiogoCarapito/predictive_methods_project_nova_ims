@@ -618,17 +618,13 @@ if st.session_state['model_run']:
                     ('knn', KNeighborsClassifier()),
                     ('svm', LinearSVC()),
                     ('nb', GaussianNB()),
-                    ('xgb', XGBClassifier()),
                     ('mlp', MLPClassifier())
                 ],
                 voting='hard'
             ).fit(X_train, y_train)
-        elif st.session_state['model'] == "SVM":
-            model = LinearSVC().fit(X_train, y_train)
         elif st.session_state['model'] == "Naive Bayes":
             model = GaussianNB().fit(X_train, y_train)
-        elif st.session_state['model'] == "XGBoost":
-            model = XGBClassifier().fit(X_train, y_train)
+
         elif st.session_state['model'] == "Neural Network":
             model = MLPClassifier(
                 hidden_layer_sizes = st.session_state['nn_hidden_layer_sizes'],
@@ -790,11 +786,12 @@ model_performance_record = pd.DataFrame({
 
 })
 
-if model_performance_record['Accuracy'] is not np.nan:
+if st.session_state['model_run'] is True:
     with open('model_performance_records.csv', mode='a') as file:
         model_performance_record.to_csv(file, header=file.tell() == 0, index=False)
 
-st.session_state['model_run'] = False
+    st.session_state['model_run'] = False
+
 st.write('----')
 
 try:

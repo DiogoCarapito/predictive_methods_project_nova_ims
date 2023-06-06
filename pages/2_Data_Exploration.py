@@ -60,6 +60,8 @@ else:
 # load dataset
 df = pd.read_csv(full_path)
 
+
+
 # show head
 st.header(".head()")
 st.write("Visualização tabular das primeiras linhas do dataset")
@@ -177,6 +179,9 @@ with col_dup_4:
 st.write("**Não parece haver duplicados!**")
 st.write("----")
 
+# transformar variáveis booleanas que estão originalmente como object
+for each in ['Disability', 'Late enrollment', 'Cancelled enrollment', 'Outdoor Workout', 'No coach', 'Past injuries']:
+    df[each] = df[each].astype(bool)
 
 # desceibe numerical variables
 st.header(".describe().T")
