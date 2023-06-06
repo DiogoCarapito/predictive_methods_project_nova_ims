@@ -19,3 +19,12 @@ Date,Model,Accuracy,Precision,Recall,F1,Accuracy_val,Precision_val,Recall_val,F1
 06/06/2023 15:29:26,Neural Network,86.54,84.61,94.67,89.36,85.83,84.06,94.11,88.8,5212,2526,9,Logarithm,2 splits,mod (remover sinal negativo),True,11,lbfgs,5,5,5,gini,5,5,Bagging,Decision Tree,gini,5,5,,,,,,,,,,,lbfgs,logistic,200,0.03,constant,4,0,0,0,0,0,0,0,0,0
 06/06/2023 15:29:31,Neural Network,86.54,84.61,94.67,89.36,85.83,84.06,94.11,88.8,5212,2526,9,Logarithm,2 splits,negative_to_0,True,11,lbfgs,5,5,5,gini,5,5,Bagging,Decision Tree,gini,5,5,,,,,,,,,,,lbfgs,logistic,200,0.03,constant,4,0,0,0,0,0,0,0,0,0
 06/06/2023 15:29:39,Neural Network,86.35,84.41,94.6,89.21,85.81,83.88,94.35,88.81,5224,2514,9,Logarithm,2 splits,negative_to_0,True,11,lbfgs,5,5,5,gini,5,5,Bagging,Decision Tree,gini,5,5,,,,,,,,,,,lbfgs,logistic,200,0.03,constant,4,0,0,0,0,0,0,0,0,0
+06/06/2023 15:49:30,Logistic Regression,86.06,83.73,95.13,89.06,85.53,83.32,94.7,88.65,5273,2465,9,Logarithm,5 splits,negative_to_0,True,11,lbfgs,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+06/06/2023 15:49:54,Logistic Regression,86.01,83.42,95.55,89.07,85.52,83.0,95.24,88.7,5319,2419,9,Logarithm,5 splits,negative_to_0,True,11,liblinear,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+06/06/2023 15:49:59,Logistic Regression,86.01,83.42,95.55,89.07,85.52,83.0,95.24,88.7,5319,2419,9,Logarithm,5 splits,negative_to_0,True,11,newton-cg,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+06/06/2023 15:50:21,Logistic Regression,86.06,83.73,95.13,89.06,85.53,83.33,94.7,88.65,5273,2465,9,Logarithm,5 splits,negative_to_0,True,11,newton-cg,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+06/06/2023 15:52:05,Logistic Regression,86.06,83.73,95.13,89.06,85.53,83.32,94.7,88.65,5273,2465,9,Logarithm,5 splits,negative_to_0,True,11,saga,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+06/06/2023 15:53:15,KNN,86.06,83.73,95.13,89.06,85.53,83.32,94.7,88.65,5273,2465,9,Logarithm,5 splits,negative_to_0,True,11,saga,11,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+06/06/2023 15:53:37,KNN,86.82,84.75,95.0,89.58,86.54,84.71,94.51,89.34,5213,2525,9,Logarithm,5 splits,negative_to_0,True,11,saga,11,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+06/06/2023 15:53:52,KNN,86.82,84.75,95.0,89.58,86.54,84.71,94.51,89.34,5213,2525,9,Logarithm,5 splits,negative_to_0,True,11,saga,11,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+06/06/2023 15:58:01,Logistic Regression,,,,,,,,,0,0,5,Logarithm,5 splits,negative_to_0,False,10,lbfgs,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
