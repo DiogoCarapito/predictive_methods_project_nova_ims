@@ -399,30 +399,7 @@ df['Total training'] = df.apply(lambda x: sum(x[col] for col in training), axis=
 df_test_copy['Total training'] = df_test_copy.apply(lambda x: sum(x[col] for col in training), axis=1)
 
 
-# SCALING
-# 13. Transformação de variáveis para o logaritmo para tratar skewness
-log_transforms = [
-    'Train bf competition',
-    'Strength training',
-    'Sand training',
-    'Recovery',
-    'Supplements',
-    'Cardiovascular training',
-    'Squad training',
-    'Physiotherapy',
-    'Plyometric training',
-    'Sport-specific training',
-    'Other training',]
-# aplicação do logaritmo
-for variable in log_transforms:
-    if st.session_state['transform'] == "Logarithm":
-        df[variable] = np.log(df[variable] + 0.01)
-        df_test_copy[variable] = np.log(df_test_copy[variable] + 0.01)
-    elif st.session_state['transform'] == "Square root":
-        df[variable] = np.sqrt(df[variable])
-        df_test_copy[variable] = np.sqrt(df_test_copy[variable])
-    else:
-        pass
+# LOCAL ANTIGO DO LOG/SQRT
 
 # 14. Drop all missing values
 df = df.dropna()
@@ -482,7 +459,7 @@ if st.session_state['model_run']:
 
     # method: KFold
     for train_index, test_index in tqdm(KFold(n_splits=num_splits).split(X)):
-        progress += 1 / num_splits
+        progress += 1 / (num_splits+1)
         progress_bar.progress(progress)
 
         X_train, X_test = X.iloc[train_index], X.iloc[test_index]
@@ -533,6 +510,37 @@ if st.session_state['model_run']:
         for each in skewed_data:
             # substituição de tudo o que for superior a 1 passar a 1
             X_train[each] = X_train[each].apply(lambda x: 1 if x > 1 else x)
+
+        # SCALING
+        # 13. Transformação de variáveis para o logaritmo para tratar skewness
+        log_transforms = [
+            'Train bf competition',
+            'Strength training',
+            'Sand training',
+            'Recovery',
+            'Supplements',
+            'Cardiovascular training',
+            'Squad training',
+            'Physiotherapy',
+            'Plyometric training',
+            'Sport-specific training',
+            'Other training', ]
+        # aplicação do logaritmo
+        for variable in log_transforms:
+            if st.session_state['transform'] == "Logarithm":
+                X_train[variable] = np.log(X_train[variable] + 0.01)
+                X_val[variable] = np.log(X_val[variable] + 0.01)
+                X_test[variable] = np.log(X_test[variable] + 0.01)
+                X_df_test_copy[variable] = np.log(X_df_test_copy[variable] + 0.01)
+                df_test_copy[variable] = np.log(df_test_copy[variable] + 0.01)
+            elif st.session_state['transform'] == "Square root":
+                X_train[variable] = np.sqrt(X_train[variable])
+                X_val[variable] = np.sqrt(X_val[variable])
+                X_test[variable] = np.sqrt(X_test[variable])
+                X_df_test_copy[variable] = np.sqrt(X_df_test_copy[variable])
+            else:
+                pass
+        #st.write(X_train.dropna().shape[0])
 
         # NORMALIZAÇÂO
         # 14. mimmax scaler
