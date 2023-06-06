@@ -56,15 +56,9 @@ st.set_page_config(
 
 st.title("Data Preprocessing")
 
-radio_dataset = st.radio("Select Dataset:", ("Train", "Test"), horizontal=True)
-
-if radio_dataset == "Train":
-    full_path = path + "train.csv"
-else:
-    full_path = path + "test.csv"
 
 # load dataset
-df = pd.read_csv(full_path)
+df = pd.read_csv(path + "train.csv")
 
 variaveis_nao_uteis = ['Outcome', 'RecordID', 'Athlete Id']
 data_types = ['int64', 'float64']
@@ -645,49 +639,8 @@ preprocessing_functions['selection_no_coach_drop'] = {
 if 'preprocessing_func_list' not in st.session_state:
     st.session_state['preprocessing_func_list'] = {}
 
-tab_function_description, tab_function_selection = st.tabs(['Descrição', 'Seleção'])
 
-with tab_function_description:
-    for key, value in preprocessing_functions.items():
-        st.subheader(key)
-        st.write('**Descrição**: ' + value['description'])
-        st.code(value['code'], language = 'python')
-
-with tab_function_selection:
-    for key, value in preprocessing_functions.items():
-        st.session_state['preprocessing_func_list'][key] = st.checkbox(key)
-
-    preprocessing_function_list = []
-    for key in st.session_state['preprocessing_func_list']:
-        if st.session_state['preprocessing_func_list'][key] == True:
-            preprocessing_function_list.append(preprocessing_functions[key]['function'])
-
-
-    # Definição de um pipleine
-    # deve ser passado um dataframe para ser processado
-    # e uma lista de funções para serem executadas por ordem
-
-    def pileline(df,function_list):
-        # iteração pelas funçoes da lista
-        for func in function_list:
-            # execução da função
-            df = func(df)
-        return df
-
-    # Aplicar pipeline ao df_train com a lista de funções 1
-    df_preprocessed_1 = pileline(df,preprocessing_function_list)
-
-    st.write('')
-    st.dataframe(df_preprocessed_1.head())
-
-    st.write(f"Total de dados: **{df.shape[0]}**")
-    st.write(f"Total de dados sem missing values: **{df.dropna().shape[0]}**")
-    st.write(f"Percentagem de linhas com missing values: **{round(100 * (1 - df.dropna().shape[0] / df.shape[0]), 2)}%**")
-
-    if st.button('Guardar seleção de funções'):
-        with open('funct_list.csv', 'w', newline='') as file:
-            writer = csv.writer(file)
-
-            # Write the list to the CSV file
-            writer.writerow(preprocessing_function_list)
-        st.success('Guardado em funct_list.csv', icon="✅")
+for key, value in preprocessing_functions.items():
+    st.subheader(key)
+    st.write('**Descrição**: ' + value['description'])
+    st.code(value['code'], language = 'python')

@@ -188,7 +188,7 @@ st.write("----")
 st.subheader("Model Parameters")
 
 if st.session_state['model'] == "Logistic Regression":
-   st.session_state['lr_solver'] = st.radio("Solver", ("lbfgs", "liblinear", "newton-cg", "newton-cholesky", "sag", "saga"), index=0, horizontal=True)
+   st.session_state['lr_solver'] = st.radio("Solver", ("lbfgs", "liblinear", "newton-cg"), index=0, horizontal=True)
    st.session_state['lr_solver']
 
 elif st.session_state['model'] == "KNN":
@@ -512,7 +512,7 @@ if st.session_state['model_run']:
             X_train[each] = X_train[each].apply(lambda x: 1 if x > 1 else x)
 
         # SCALING
-        # 13. Transformação de variáveis para o logaritmo para tratar skewness
+        # 14. Transformação de variáveis para o logaritmo para tratar skewness
         log_transforms = [
             'Train bf competition',
             'Strength training',
@@ -543,7 +543,7 @@ if st.session_state['model_run']:
         #st.write(X_train.dropna().shape[0])
 
         # NORMALIZAÇÂO
-        # 14. mimmax scaler
+        # 15. mimmax scaler
         minmax_scaler = MinMaxScaler()
         # filtrar dataframe apenas pelas variáveis numéricas
         #variaveis_numericas = X_train.select_dtypes(include=['int', 'float']).columns.tolist()
@@ -588,7 +588,7 @@ if st.session_state['model_run']:
 
 
         # RFE
-        # 15. Recursive Feature Elimination
+        # 16. Recursive Feature Elimination
         if st.session_state['rfe'] is True:
             rfe_model = LogisticRegression()
             rfe = RFE(estimator=rfe_model, n_features_to_select=st.session_state['num_features'])
