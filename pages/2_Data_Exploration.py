@@ -62,10 +62,19 @@ df = pd.read_csv(full_path)
 
 # show head
 st.header(".head()")
+st.write("Visualização tabular das primeiras linhas do dataset")
 st.table(df.head())
 
-st.write(f"Número de linhas: **{df.shape[0]}**")
-st.write(f"Número de variáveis: **{df.shape[1]}**")
+#st.write(f"Número de linhas: **{df.shape[0]}**")
+#st.write(f"Número de variáveis: **{df.shape[1]}**")
+
+col_metrics_1, col_metrics_2 = st.columns(2)
+with col_metrics_1:
+    st.metric("Número de linhas", df.shape[0])
+with col_metrics_2:
+    st.metric("Número de variáveis", df.shape[1])
+
+st.write("----")
 
 # Descrição de cada variável
 description = {
@@ -102,44 +111,97 @@ description = {
 }
 
 # Descrição de cada variável
-st.header("Descrição de cada variável")
+st.header("Lista de variáveis")
+st.write("Descrição de cada variável")
 #st.table(pd.DataFrame.from_dict(description, orient='index', columns=['Description']))
 st.table(pd.concat([
     pd.DataFrame.from_dict(description, orient='index', columns=['Descrição']),
     df.dtypes.rename("Tipo de dados").replace({"object": "Categórico", "int64": "Numérico", "float64": "Numérico", "bool": "Booleano"}),
     ], axis=1))
 
-# desceibe numerical variables
-st.header(".describe().T")
-st.table(df.describe().T)
+st.write("Notas:")
+st.write("- Só existem variáveis numéricas e categóricas, aparentemente não há variaveis booleanas, mas possível que haja variáveis categóricas com apenas 2 valores possíveis ou variáveis numéricas com apenas 0 e 1.")
+st.write("- Athelte Id e RecordID são variáveis de identificação, logo não são relevantes para o modelo.")
+st.write("- Outcome é a variável target, que é numérica mas varia entre 0 e 1. Portanto, é um problema de Classificação")
+st.write("----")
 
-# describe categorical variables
-st.header(".describe(include='object').T")
-st.table(df.describe(include='object').T)
+
 
 # Missing values
-st.header("Contagem e percentagem de missing values")
+st.header("Missing values")
 st.table(pd.concat([
     df.isna().sum(),
     round(df.isna().sum()/len(df)*100, 3).apply(lambda x: '{:.3f}%'.format(x)),
     ], axis=1)
 )
 
-st.write(f"Total de dados: **{df.shape[0]}**")
-st.write(f"Total de dados sem missing values: **{df.dropna().shape[0]}**")
-st.write(f"Percentagem de linhas com missing values: **{round(100*(1-df.dropna().shape[0]/df.shape[0]),2)}%**")
+#st.write(f"Total de dados: **{df.shape[0]}**")
+#st.write(f"Total de dados sem missing values: **{df.dropna().shape[0]}**")
+#st.write(f"Percentagem de linhas com missing values: **{round(100*(1-df.dropna().shape[0]/df.shape[0]),2)}%**")
+
+col_mv_1, col_mv_2, col_mv_3 = st.columns(3)
+with col_mv_1:
+    st.metric("Total de dados:",df.shape[0])
+with col_mv_2:
+    st.metric("Total de dados sem missing values:",df.dropna().shape[0])
+with col_mv_3:
+    st.metric("Percentagem de linhas com missing values:",str(round(100*(1-df.dropna().shape[0]/df.shape[0]),2))+"%")
+#st.write(f"Total de dados: **{df.shape[0]}**")
+#st.write(f"Total de dados sem missing values: **{df.dropna().shape[0]}**")
+#st.write(f"Percentagem de linhas com missing values: **{round(100*(1-df.dropna().shape[0]/df.shape[0]),2)}%**")
+
+
+st.write("Notas:")
+st.write("- Todas as variáveis têm missing values, excepto Outcome e RecordID.")
+st.write("- Se removessemos todas as linhas com missing values, perdiamos 13,% dos dados.")
+st.write("- Será importante tratar os missing.")
+st.write("----")
+
+
 
 # dados duplicados
 st.header("Deteção de duplicados")
-st.write(f"Número de duplicados: **{df.duplicated().sum()}**")
-st.write(f"Número de duplicados no RecordID: **{df.RecordID.duplicated().sum()}**")
-st.write(f"Número de duplicados excluindo RecordID: **{df.drop(['RecordID'], axis=1).duplicated().sum()}**")
-st.write(f"Número de duplicados excluindo e Athlete Id: **{df.drop(['RecordID', 'Athlete Id'], axis=1).duplicated().sum()}**")
+col_dup_1, col_dup_2, col_dup_3, col_dup_4 = st.columns(4)
+with col_dup_1:
+    st.metric("Nº duplicados",df.duplicated().sum())
+with col_dup_2:
+    st.metric("Nº duplicados no RecordID",df.RecordID.duplicated().sum())
+with col_dup_3:
+    st.metric("Nº dup. excluindo RecordID",df.drop(['RecordID'], axis=1).duplicated().sum())
+with col_dup_4:
+    st.metric("Nº dup. ex. RecordID e Athlete Id",df.drop(['RecordID', 'Athlete Id'], axis=1).duplicated().sum())
+#st.write(f"Número de duplicados: **{df.duplicated().sum()}**")
+#st.write(f"Número de duplicados no RecordID: **{df.RecordID.duplicated().sum()}**")
+#st.write(f"Número de duplicados excluindo RecordID: **{df.drop(['RecordID'], axis=1).duplicated().sum()}**")
+#st.write(f"Número de duplicados excluindo e Athlete Id: **{df.drop(['RecordID', 'Athlete Id'], axis=1).duplicated().sum()}**")
 st.write("**Não parece haver duplicados!**")
+st.write("----")
+
+
+# desceibe numerical variables
+st.header(".describe().T")
+st.write("Visão descritiva básica de variáveis numéricas")
+st.table(df.describe().T)
+st.write("Notas:")
+st.write("- há variáveis têm um standard deviation e valores máximso muito elevado, o que indica que os valores estão muito dispersos e/ou existência de outliers.")
+st.write("- há variáveis com valores mínimos abaixo de 0 (Athlete score e Physiotherapy), o que não faz sentido e vai ser necessário corrigir.")
+st.write("----")
+
+# describe categorical variables
+st.header(".describe(include='object').T")
+st.write("Visão descritiva básica de variáveis categoricas")
+st.table(df.describe(include='object').T)
+st.write("Notas:")
+st.write("- Afinal já existem variáveis booleanas, mal interpretadas inicialmente por categóticas.")
+st.write("- Mental preparation, No coach, Outdoor Workout, Past injuries, Cancelled enrollment, Late enrollment e Disability são variáveis booleanas.")
+st.write("- Existem variáveis com muitos valores únicos, poderá ser necessário reduzir.")
+st.write("- Sex poderá ser considerada uma variável booleana se for necessário processar dessa forma dependendo do modelo.")
+st.write("----")
+
 
 variaveis_numericas = list(df.select_dtypes(include=['int64','float64']).columns)
 st.header('Variáveis numéricas')
-st.table(variaveis_numericas)
+st.write(variaveis_numericas)
 
 def plot_multiple_histograms(data, feats, title="Numeric Variables' Histograms"):
 
@@ -191,11 +253,28 @@ plot_multiple_boxplots(df, variaveis_numericas)
 
 variaveis_categoricas = list(df.select_dtypes(include='object').columns)
 st.header('Variáveis categóricas')
-st.table(variaveis_categoricas)
+st.write(variaveis_categoricas)
+
+def plot_multiple_barplots(data, feats, title):
+    fig, axes = plt.subplots(2, np.ceil(len(feats) / 2).astype(int), figsize=(20, 11))
+
+    for ax, feat in zip(axes.flatten(), feats):
+        sns.countplot(x=data[feat], ax=ax)
+        ax.set_title(feat)
+        ax.tick_params(axis='x', rotation=45)
+    fig.suptitle(title)
+
+    st.pyplot(fig)
+
+    return
+
+plot_multiple_barplots(df, variaveis_categoricas, "Categorical Variables' Bar Plots")
+
 
 variaveis_booleanas = list(df.select_dtypes(include='bool').columns)
 st.header('Variáveis booleanas')
-st.table(variaveis_booleanas)
+st.write(variaveis_booleanas)
+plot_multiple_barplots(df, variaveis_booleanas, "Boolean Variables' Bar Plots")
 
 
 #pair plot
