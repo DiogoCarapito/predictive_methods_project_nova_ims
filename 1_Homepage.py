@@ -16,9 +16,9 @@ with col_1:
     st.write("""
     - Diogo Carapito (20211202)
     - Joana Alexandre (20211236)
-    - Miguel Carvalho ()
-    - Miguel Goulão ()
-    - Tomás Santos ()
+    - Miguel Carvalho (r20181081)
+    - Miguel Goulão (20222120)
+    - Tomás Santos (20221701)
     """)
 
 with col_2:
