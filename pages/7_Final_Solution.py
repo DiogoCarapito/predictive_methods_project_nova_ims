@@ -50,6 +50,8 @@ if 'final_predictions' not in st.session_state:
     st.session_state['final_predictions'] = pd.DataFrame(columns=['Outcome'])
 if 'rfe_selected_features' not in st.session_state:
     st.session_state['rfe_selected_features'] = []
+if 'rfe' not in st.session_state:
+    st.session_state['rfe'] = True
 
 list_session_state_variables = [
     'accuracy',
@@ -60,8 +62,6 @@ list_session_state_variables = [
     'precision_val',
     'recall_val',
     'f1_val',
-    'rfe',
-
 
     'nn_solver',
     'nn_activation',
@@ -208,12 +208,12 @@ df['Age group'] = df['Age group'].replace(substitute)
 df_test_copy['Age group'] = df_test_copy['Age group'].replace(substitute)
 
 # 4. Late enrollment na realidade é um booleano disfarcado de 0 e 1
-df['Late enrollment'] = df['Late enrollment'].replace({0: False,1: True})
-df_test_copy['Late enrollment'] = df_test_copy['Late enrollment'].replace({0: False,1: True})
+#df['Late enrollment'] = df['Late enrollment'].replace({0: False,1: True})
+#df_test_copy['Late enrollment'] = df_test_copy['Late enrollment'].replace({0: False,1: True})
 
 # 5. No coach na realidade é um booleano disfarcado de 0 e 1
-df['No coach'] = df['No coach'].replace({0: False,1: True})
-df_test_copy['No coach'] = df_test_copy['No coach'].replace({0: False,1: True})
+#df['No coach'] = df['No coach'].replace({0: False,1: True})
+#df_test_copy['No coach'] = df_test_copy['No coach'].replace({0: False,1: True})
 
 # MISSING VAULES
 # 6. missing values pela moda em variaves categoricas
@@ -295,33 +295,12 @@ df['Total training'] = df.apply(lambda x: sum(x[col] for col in training), axis=
 df_test_copy['Total training'] = df_test_copy.apply(lambda x: sum(x[col] for col in training), axis=1)
 
 
-# SCALING
-# 14. Transformação de variáveis para o logaritmo para tratar skewness
-log_transforms = [
-    'Train bf competition',
-    'Strength training',
-    'Sand training',
-    'Recovery',
-    'Supplements',
-    'Cardiovascular training',
-    'Squad training',
-    'Physiotherapy',
-    'Plyometric training',
-    'Sport-specific training',
-    'Other training', ]
-# aplicação do logaritmo
-for variable in log_transforms:
-    if st.session_state['transform'] == "Logarithm":
-        df[variable] = np.log(df[variable] + 0.01)
-        df_test_copy[variable] = np.log(df_test_copy[variable] + 0.01)
-    elif st.session_state['transform'] == "Square root":
-        df[variable] = np.sqrt(df[variable])
-        df_test_copy[variable] = np.sqrt(df_test_copy[variable])
-    else:
-        pass
-
 # 14. Drop remaining missing values
+st.write(df.isnull().sum())
+#st.metric("Lost information", 100 * df.isnull().sum()/df.shape[0])
 df = df.dropna()
+
+
 
 
 ### SPLIT ###
@@ -402,13 +381,11 @@ if st.session_state['model_run']:
 
         # 4. substituir valores de skewness muito elevados por um tecto maximo
         high_skewness_variables = {
-            'Sand training': 500,
             'Recovery': 4000,
             'Cardiovascular training': 4000,
             'Squad training': 150,
             'Physiotherapy': 800,
             'Sport-specific training': 320,
-            'Other training': 130,
         }
         for key, value in high_skewness_variables.items():
             X_train[key] = X_train[key].apply(lambda x: value if x > value else x).astype(float)
@@ -425,7 +402,35 @@ if st.session_state['model_run']:
             X_train[each] = X_train[each].apply(lambda x: 1 if x > 1 else x)
 
 
-        #st.write(X_train.dropna().shape[0])
+        # SCALING
+        # 14. Transformação de variáveis para o logaritmo para tratar skewness
+        log_transforms = [
+            'Train bf competition',
+            'Strength training',
+            'Sand training',
+            'Recovery',
+            'Supplements',
+            'Cardiovascular training',
+            'Squad training',
+            'Physiotherapy',
+            'Plyometric training',
+            'Sport-specific training',
+            'Other training', ]
+        # aplicação do logaritmo
+        for variable in log_transforms:
+            if st.session_state['transform'] == "Logarithm":
+                X_train[variable] = np.log(X_train[variable] + 0.01)
+                X_val[variable] = np.log(X_val[variable] + 0.01)
+                X_test[variable] = np.log(X_test[variable] + 0.01)
+                X_df_test_copy[variable] = np.log(X_df_test_copy[variable] + 0.01)
+            elif st.session_state['transform'] == "Square root":
+                X_train[variable] = np.sqrt(X_train[variable])
+                X_val[variable] = np.sqrt(X_val[variable])
+                X_test[variable] = np.sqrt(X_test[variable])
+                X_df_test_copy[variable] = np.sqrt(X_df_test_copy[variable])
+            else:
+                pass
+
 
         # NORMALIZAÇÂO
         # 15. mimmax scaler
@@ -498,6 +503,7 @@ if st.session_state['model_run']:
             max_iter=st.session_state['nn_max_iter'],
             learning_rate=st.session_state['nn_learning_rate'],
             learning_rate_init=st.session_state['nn_learning_rate_init'],
+            random_state = 15,
         ).fit(X_train_rfe, y_train)
 
         predictions = model.predict(X_test_rfe)
