@@ -296,7 +296,7 @@ df_test_copy['Total training'] = df_test_copy.apply(lambda x: sum(x[col] for col
 
 
 # 14. Drop remaining missing values
-st.write(df.isnull().sum())
+#st.write(df.isnull().sum())
 #st.metric("Lost information", 100 * df.isnull().sum()/df.shape[0])
 df = df.dropna()
 
