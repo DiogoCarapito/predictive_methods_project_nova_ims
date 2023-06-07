@@ -40,6 +40,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 from math import ceil
+from scipy.stats import skew
 
 # Page Setup
 st.set_page_config(
@@ -229,6 +230,7 @@ def plot_multiple_histograms(data, feats, title="Numeric Variables' Histograms")
     return
 
 
+
 ## Define a function that plots multiple box plots
 
 def plot_multiple_boxplots(data, feats, title="Numeric Variables' Box Plots"):
@@ -253,8 +255,70 @@ def plot_multiple_boxplots(data, feats, title="Numeric Variables' Box Plots"):
 
 sns.set()
 
+st.subheader("Histogramas")
 plot_multiple_histograms(df, variaveis_numericas)
+st.subheader("Boxplots")
 plot_multiple_boxplots(df, variaveis_numericas)
+
+
+st.subheader("Skewness")
+# Calculate skewness
+skewness = df.skew()
+skewness_sorted = skewness.sort_values(ascending=False)
+skewness_sorted = skewness_sorted.drop('No coach')
+
+fig = plt.figure(figsize=(10, 6))
+skewness_sorted.plot(kind='bar')
+plt.xlabel('Variable')
+plt.ylabel('Skewness')
+plt.title('Skewness of Variables')
+plt.xticks(rotation=90)
+st.pyplot(fig)
+
+
+skewed_vars = skewness[skewness > 5].index.tolist()
+skewed_vars.remove('No coach')
+skewed_vars.remove('Late enrollment')
+df_train_1 = df[df['Outcome'] == 1]
+df_train_0 = df[df['Outcome'] == 0]
+
+
+# Calculate the number of rows and columns for the grid
+num_vars = len(skewed_vars)
+num_cols = min(1, num_vars)  # Set the maximum number of columns to 2
+num_rows = int(np.ceil(num_vars / num_cols))
+
+# Create the subplots grid
+fig, axes = plt.subplots(num_rows, num_cols, figsize=(20, 40))
+
+# Flatten the axes array for easier indexing
+axes = axes.flatten()
+
+# Loop through the skewed variables
+for i, var in enumerate(skewed_vars):
+    ax = axes[i]
+
+    # Plot the scatter plots
+    sns.scatterplot(x=range(len(df_train_1[var])), y=df_train_1[var], label='Outcome 1', ax=ax)
+    sns.scatterplot(x=range(len(df_train_0[var])), y=df_train_0[var], label='Outcome 0', ax=ax)
+
+    # Set the title and labels
+    ax.set_title("Scatter Plot of " + var, fontsize=16)
+    ax.set_xlabel("Index", fontsize=14)
+    ax.set_ylabel(var, fontsize=14)
+
+# Remove any unused subplots
+if num_vars < len(axes):
+    for j in range(num_vars, len(axes)):
+        fig.delaxes(axes[j])
+
+# Adjust spacing between subplots
+fig.tight_layout()
+
+# Display the grid of scatter plots
+st.pyplot(fig)
+
+st.write("----")
 
 variaveis_categoricas = list(df.select_dtypes(include='object').columns)
 st.header('Variáveis categóricas')
@@ -278,12 +342,15 @@ try:
 except:
     st.write("Erro ao executar plot_multiple_barplots")
 
+
+st.write("----")
 variaveis_booleanas = list(df.select_dtypes(include='bool').columns)
 st.header('Variáveis booleanas')
 st.write(variaveis_booleanas)
 plot_multiple_barplots(df, variaveis_booleanas, "Boolean Variables' Bar Plots")
 
 
+st.write("----")
 #pair plot
 st.header("Pairwise Relationship of Numerical Variables")
 
