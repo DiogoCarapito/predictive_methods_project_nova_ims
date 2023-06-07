@@ -197,7 +197,6 @@ st.subheader("Model Parameters")
 
 if st.session_state['model'] == "Logistic Regression":
    st.session_state['lr_solver'] = st.radio("Solver", ("lbfgs", "liblinear", "newton-cg"), index=0, horizontal=True)
-   st.session_state['lr_solver']
 
 elif st.session_state['model'] == "KNN":
    st.session_state['knn_n_neighbors'] = st.slider("Number of neighbors",min_value=1,max_value=25, value=5, step=2)
