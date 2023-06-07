@@ -174,6 +174,24 @@ st.session_state['model'] = st.radio("Model Selection", (
     "Neural Network"
 ), index=0, horizontal=True)
 
+
+st.write("----")
+
+
+# MENU
+st.subheader("Data Preprocessing Parameters")
+
+st.session_state['num_knn'] = st.radio("Missing Values KNN Number of neighbors", [1, 3, 5, 7, 9, 11, 13, 15], index=2, horizontal=True)
+st.session_state['transform'] = st.radio("Transform", ("Logarithm", "Square root", "None"), index=0, horizontal=True)
+st.session_state['cross_validation_splits'] = st.radio("Cross Validation Splits", ("2 splits", "5 splits", "10 splits" ), index=1, horizontal=True)
+st.session_state['outlier_treatment'] = st.radio("Outlier outlier_treatment", ("negative_to_0", "mod (remover sinal negativo)"), index=0, horizontal=True)
+st.session_state['rfe'] = st.checkbox("Recursive Feature Elimination", value=False)
+st.session_state['num_features'] = st.slider("Number of features", 1, 40, 10, disabled = bool(not st.session_state['rfe']))
+
+
+
+
+
 st.write("----")
 st.subheader("Model Parameters")
 
@@ -247,18 +265,6 @@ elif st.session_state['model'] == "Neural Network":
     st.session_state['nn_learning_rate'] = st.radio("Learning rate", ("constant", "invscaling", "adaptive"), index=0, horizontal=True)
 
 st.write("----")
-
-
-# MENU
-st.subheader("Data Preprocessing Parameters")
-
-
-st.session_state['num_knn'] = st.radio("Missing Values KNN Number of neighbors", [1, 3, 5, 7, 9, 11, 13, 15], index=2, horizontal=True)
-st.session_state['transform'] = st.radio("Transform", ("Logarithm", "Square root", "None"), index=0, horizontal=True)
-st.session_state['cross_validation_splits'] = st.radio("Cross Validation Splits", ("2 splits", "5 splits", "10 splits" ), index=1, horizontal=True)
-st.session_state['outlier_treatment'] = st.radio("Outlier outlier_treatment", ("negative_to_0", "mod (remover sinal negativo)"), index=0, horizontal=True)
-st.session_state['rfe'] = st.checkbox("Recursive Feature Elimination", value=False)
-st.session_state['num_features'] = st.slider("Number of features", 1, 40, 10, disabled = bool(not st.session_state['rfe']))
 
 
 df = df_train.copy()
@@ -450,7 +456,6 @@ if 'model_run' not in st.session_state:
 st.button("Run Model", type="primary", on_click=lambda: st.session_state.update(model_run=True))
 
 if st.session_state['model_run']:
-    st.write("----")
     st.write("Running model...")
     progress_bar = st.progress(0)
     progress = 0
@@ -709,11 +714,15 @@ if st.session_state['model_run']:
     with col_outcome_2:
         st.metric("Number of Outcome = 0", str(len(st.session_state['final_predictions'][st.session_state['final_predictions']['Outcome']==0])))
 
+    st.write("----")
+
 
     sv_data = st.session_state['final_predictions'].to_csv(index=True)
     buffer = io.BytesIO()
     buffer.write(sv_data.encode())
     buffer.seek(0)
+
+
 
 model_performance_record = pd.DataFrame({
     'Date': [dt.datetime.now().strftime("%d/%m/%Y %H:%M:%S")],
@@ -788,7 +797,7 @@ if st.session_state['model_run'] is True:
 
     st.session_state['model_run'] = False
 
-st.write('----')
+
 
 try:
     st.download_button(label='Download predictions', data=sv_data, file_name='solution.csv', disabled=st.session_state['model_run'])

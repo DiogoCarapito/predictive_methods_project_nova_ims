@@ -1,0 +1,15 @@
+Date,Accuracy,Precision,Recall,F1,Accuracy_val,Precision_val,Recall_val,F1_val,Number of Outcome = 1,Number of Outcome = 0,num_knn,transform,cross_validation_splits,outlier_treatment,rfe,num_features,nn_solver,nn_activation,nn_max_iter,nn_learning_rate_init,nn_learning_rate,nn_hidden_layer_1,nn_hidden_layer_2,nn_hidden_layer_3,nn_hidden_layer_4,nn_hidden_layer_5,nn_hidden_layer_6,nn_hidden_layer_7,nn_hidden_layer_8,nn_hidden_layer_9,nn_hidden_layer_10,07/06/2023 01:37:07,87.31,84.79,95.96,90.02,86.79,84.52,95.32,89.59,5266,2472,11,Logarithm,5 splits,negative_to_0,True,11,sgd,tanh,200,0.1,adaptive,8,8,6,0,0,0,0,0,0,0
+07/06/2023 01:38:09,79.34,87.48,76.52,80.94,78.8,86.19,76.99,80.7,5111,2627,11,Logarithm,5 splits,negative_to_0,True,20,sgd,tanh,200,0.1,adaptive,8,8,6,0,0,0,0,0,0,0
+07/06/2023 01:39:03,87.2,84.87,95.59,89.91,86.85,84.6,95.31,89.64,5234,2504,11,Logarithm,5 splits,negative_to_0,True,12,sgd,tanh,200,0.1,adaptive,8,8,6,0,0,0,0,0,0,0
+07/06/2023 01:39:49,87.32,84.88,95.82,90.02,86.8,84.55,95.3,89.6,5256,2482,11,Logarithm,5 splits,negative_to_0,True,11,sgd,tanh,200,0.1,adaptive,8,8,6,0,0,0,0,0,0,0
+07/06/2023 01:40:34,87.3,84.9,95.76,90.0,86.81,84.49,95.42,89.62,5263,2475,11,Logarithm,5 splits,negative_to_0,True,11,sgd,tanh,200,0.1,adaptive,8,8,5,0,0,0,0,0,0,0
+07/06/2023 01:41:23,87.33,84.9,95.82,90.03,86.83,84.63,95.21,89.61,5240,2498,11,Logarithm,5 splits,negative_to_0,True,11,sgd,tanh,200,0.1,adaptive,8,8,7,0,0,0,0,0,0,0
+07/06/2023 01:42:10,87.4,85.03,95.74,90.06,86.79,84.58,95.22,89.59,5239,2499,11,Logarithm,5 splits,negative_to_0,True,11,sgd,tanh,200,0.1,adaptive,9,9,7,0,0,0,0,0,0,0
+07/06/2023 01:45:03,87.2,84.79,95.73,89.93,86.6,84.37,95.17,89.45,5238,2500,11,Logarithm,5 splits,negative_to_0,True,11,sgd,tanh,200,0.1,adaptive,7,7,7,0,0,0,0,0,0,0
+07/06/2023 01:46:23,87.23,84.88,95.64,89.94,86.73,84.44,95.34,89.56,5241,2497,11,Logarithm,5 splits,negative_to_0,True,11,sgd,tanh,200,0.1,adaptive,8,8,5,0,0,0,0,0,0,0
+07/06/2023 01:47:15,87.3,84.89,95.76,90.0,86.84,84.63,95.23,89.62,5243,2495,11,Logarithm,5 splits,negative_to_0,True,11,sgd,tanh,200,0.1,adaptive,8,8,6,0,0,0,0,0,0,0
+07/06/2023 01:47:47,86.9,84.51,95.56,89.7,86.31,84.17,94.93,89.22,5234,2504,11,Logarithm,5 splits,negative_to_0,True,11,lbfgs,tanh,200,0.1,adaptive,8,8,6,0,0,0,0,0,0,0
+07/06/2023 01:48:40,87.24,84.93,95.57,89.93,86.65,84.48,95.1,89.47,5209,2529,11,Logarithm,5 splits,negative_to_0,True,11,sgd,relu,200,0.1,adaptive,8,8,6,0,0,0,0,0,0,0
+07/06/2023 01:49:14,85.79,83.14,95.57,88.93,85.21,82.73,95.07,88.47,5338,2400,11,Logarithm,5 splits,negative_to_0,True,11,sgd,tanh,200,0.1,invscaling,8,8,6,0,0,0,0,0,0,0
+07/06/2023 01:50:05,87.27,84.85,95.77,89.98,86.92,84.62,95.41,89.69,5243,2495,11,Logarithm,5 splits,negative_to_0,True,11,sgd,tanh,200,0.1,adaptive,8,8,6,0,0,0,0,0,0,0
+07/06/2023 01:51:01,86.71,84.41,95.33,89.54,86.3,84.11,95.0,89.22,5237,2501,11,Logarithm,5 splits,negative_to_0,True,11,sgd,tanh,200,0.03,adaptive,8,8,6,0,0,0,0,0,0,0

@@ -70,4 +70,4 @@ for each in other_models:
     with col_best_2: st.metric('F1_val', df_other_model_best_score['F1_val'])
     st.write("Parameters")
     st.dataframe(df_other_model_best_score)
-    st.write("----")
+    st.write("")

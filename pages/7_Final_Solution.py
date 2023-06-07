@@ -48,6 +48,8 @@ st.set_page_config(
 
 if 'final_predictions' not in st.session_state:
     st.session_state['final_predictions'] = pd.DataFrame(columns=['Outcome'])
+if 'rfe_selected_features' not in st.session_state:
+    st.session_state['rfe_selected_features'] = []
 
 list_session_state_variables = [
     'accuracy',
@@ -58,6 +60,8 @@ list_session_state_variables = [
     'precision_val',
     'recall_val',
     'f1_val',
+    'rfe',
+
 
     'nn_solver',
     'nn_activation',
@@ -82,9 +86,6 @@ for each in list_session_state_variables:
     if each not in st.session_state:
        st.session_state[each] = np.nan
 
-
-# Page Setup
-st.title("Model Selection")
 
 # Data Loading
 df_train = pd.read_csv(path + 'train.csv')
@@ -121,18 +122,32 @@ variaveis_categoricas = [
     'Age group',
     'Income'
 ]
+# Page Setup
+st.title("Final Solution")
+st.header("Neural Network - MLPClassifier()")
+st.write("----")
 
+# MENU
+st.subheader("Data Preprocessing Parameters")
+
+st.session_state['num_knn'] = st.radio("Missing Values - KNN Number of neighbors", [1, 3, 5, 7, 9, 11, 13, 15], index=5, horizontal=True)
+st.session_state['transform'] = st.radio("Transform Data (skewed data)", ("Logarithm", "Square root", "None"), index=0, horizontal=True)
+st.session_state['cross_validation_splits'] = st.radio("Cross Validation - Nº Splits", ("2 splits", "5 splits", "10 splits" ), index=1, horizontal=True)
+st.session_state['outlier_treatment'] = st.radio("Outlier - negative numbers treatment", ("negative_to_0", "mod (remover sinal negativo)"), index=0, horizontal=True)
+st.session_state['rfe'] = st.checkbox("Recursive Feature Elimination", value=True)
+st.session_state['num_features'] = st.slider("Number of features", 1, 40, 11, disabled = bool(not st.session_state['rfe']))
 
 st.write("----")
-st.subheader("NN Parameters")
 
-st.session_state['nn_solver'] = st.radio("Solver", ("lbfgs", "sgd", "adam"), index=0, horizontal=True)
-st.session_state['nn_activation'] = st.radio("Activation", ("logistic", "tanh", "relu"), index=0, horizontal=True)
+st.subheader("Model Parameters")
+
+st.session_state['nn_solver'] = st.radio("Solver", ("lbfgs", "sgd", "adam"), index=1, horizontal=True)
+st.session_state['nn_activation'] = st.radio("Activation", ("logistic", "tanh", "relu"), index=1, horizontal=True)
 
 col_hl_1, col_hl_2, col_hl_3, col_hl_4, col_hl_5  = st.columns(5)
-with col_hl_1: st.session_state['nn_hidden_layer_1'] = st.number_input("Hidden layer 1 size", 1, 100, 10)
-with col_hl_2: st.session_state['nn_hidden_layer_2'] = st.number_input("Hidden layer 2 size", 0, 100, 0)
-with col_hl_3: st.session_state['nn_hidden_layer_3'] = st.number_input("Hidden layer 3 size", 0, 100, 0)
+with col_hl_1: st.session_state['nn_hidden_layer_1'] = st.number_input("Hidden layer 1 size", 1, 100, 8)
+with col_hl_2: st.session_state['nn_hidden_layer_2'] = st.number_input("Hidden layer 2 size", 0, 100, 8)
+with col_hl_3: st.session_state['nn_hidden_layer_3'] = st.number_input("Hidden layer 3 size", 0, 100, 6)
 with col_hl_4: st.session_state['nn_hidden_layer_4'] = st.number_input("Hidden layer 4 size", 0, 100, 0)
 with col_hl_5: st.session_state['nn_hidden_layer_5'] = st.number_input("Hidden layer 5 size", 0, 100, 0)
 col_hl_6, col_hl_7, col_hl_8, col_hl_9, col_hl_10,  = st.columns(5)
@@ -145,22 +160,13 @@ st.session_state['nn_hidden_layer_sizes'] = (st.session_state['nn_hidden_layer_1
 st.session_state['nn_hidden_layer_sizes'] = list(filter(lambda x: x != 0, st.session_state['nn_hidden_layer_sizes']))
 
 st.session_state['nn_max_iter'] = st.slider("Max iter", 1, 1000, 200)
-st.session_state['nn_learning_rate_init'] = st.radio("Learning rate init", [0.0003, 0.001, 0.003, 0.01, 0.03, 0.1, 0.3, 1], index=0, horizontal=True)
-st.session_state['nn_learning_rate'] = st.radio("Learning rate", ("constant", "invscaling", "adaptive"), index=0, horizontal=True)
+st.session_state['nn_learning_rate_init'] = st.radio("Learning rate init", [0.0003, 0.001, 0.003, 0.01, 0.03, 0.1, 0.3, 1], index=5, horizontal=True)
+st.session_state['nn_learning_rate'] = st.radio("Learning rate", ("constant", "invscaling", "adaptive"), index=2, horizontal=True)
 
 st.write("----")
 
 
-# MENU
-st.subheader("Data Preprocessing Parameters")
 
-
-st.session_state['num_knn'] = st.radio("Missing Values KNN Number of neighbors", [1, 3, 5, 7, 9, 11, 13, 15], index=2, horizontal=True)
-st.session_state['transform'] = st.radio("Transform", ("Logarithm", "Square root", "None"), index=0, horizontal=True)
-st.session_state['cross_validation_splits'] = st.radio("Cross Validation Splits", ("2 splits", "5 splits", "10 splits" ), index=1, horizontal=True)
-st.session_state['outlier_treatment'] = st.radio("Outlier outlier_treatment", ("negative_to_0", "mod (remover sinal negativo)"), index=0, horizontal=True)
-st.session_state['rfe'] = st.checkbox("Recursive Feature Elimination", value=False)
-st.session_state['num_features'] = st.slider("Number of features", 1, 40, 10, disabled = bool(not st.session_state['rfe']))
 
 
 df = df_train.copy()
@@ -477,7 +483,7 @@ if st.session_state['model_run']:
             X_train_rfe = X_train.loc[:, selected_features]
             X_val_rfe = X_val.loc[:, selected_features]
             X_df_test_copy_rfe = X_df_test_copy.loc[:, selected_features]
-            #st.write(selected_features)
+            st.session_state['rfe_selected_features'] = X_test_rfe.columns
         else:
             X_test_rfe = X_test
             X_train_rfe = X_train
@@ -580,7 +586,7 @@ if st.session_state['model_run']:
 
 model_performance_record = pd.DataFrame({
     'Date': [dt.datetime.now().strftime("%d/%m/%Y %H:%M:%S")],
-    'Model': [st.session_state['model']],
+
     'Accuracy': st.session_state['accuracy'],
     'Precision': st.session_state['precision'],
     'Recall': st.session_state['recall'],
@@ -601,7 +607,6 @@ model_performance_record = pd.DataFrame({
 
     'nn_solver': st.session_state['nn_solver'],
     'nn_activation': st.session_state['nn_activation'],
-
     'nn_max_iter': st.session_state['nn_max_iter'],
     'nn_learning_rate_init': st.session_state['nn_learning_rate_init'],
     'nn_learning_rate': st.session_state['nn_learning_rate'],
@@ -617,6 +622,8 @@ model_performance_record = pd.DataFrame({
     'nn_hidden_layer_10': st.session_state['nn_hidden_layer_10'],
 
 })
+
+st.write(st.session_state['rfe_selected_features'])
 
 if st.session_state['model_run'] is True:
     with open('nn_performance_records.csv', mode='a') as file:
