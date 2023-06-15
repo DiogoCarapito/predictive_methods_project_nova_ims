@@ -263,7 +263,7 @@ plot_multiple_boxplots(df, variaveis_numericas)
 
 st.subheader("Skewness")
 # Calculate skewness
-skewness = df.skew()
+skewness = df.skew(numeric_only=True)
 skewness_sorted = skewness.sort_values(ascending=False)
 skewness_sorted = skewness_sorted.drop('No coach')
 
